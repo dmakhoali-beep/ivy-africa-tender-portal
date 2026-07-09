@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Ivy Africa Tender Portal</title>
+<link rel="manifest" href="/manifest.json" />
+<meta name="theme-color" content="#0B3D2E" />
+<link rel="apple-touch-icon" href="/icons/icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{
+  --green:#0B3D2E; --green2:#124A38; --orange:#E8722C; --blue:#1B4F8C;
+  --bg:#F5F3EC; --card:#FFFFFF; --line:#E4E0D4; --ink:#16231C; --mut:#6E7368;
+  --display:'DM Serif Display', Georgia, serif;
+  --eyebrow:'Syne', system-ui, sans-serif;
+  --body:'DM Sans', system-ui, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:var(--body);}
+body{background:
+    radial-gradient(1200px 400px at 100% -10%, rgba(232,114,44,.08), transparent 60%),
+    radial-gradient(1000px 500px at -10% 110%, rgba(27,79,140,.06), transparent 60%),
+    var(--bg);
+  color:var(--ink);}
+#app{min-height:100vh;max-width:1180px;margin:0 auto;padding:28px 20px 60px;}
+h1{font-family:var(--display);font-size:30px;font-weight:400;letter-spacing:-.01em;color:var(--green);}
+.sub{font-family:var(--eyebrow);color:var(--mut);font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-top:6px;font-weight:600;}
+.top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:26px;flex-wrap:wrap;gap:12px;padding-bottom:20px;border-bottom:2px solid var(--green);}
+.reportbtns,.month-nav{display:flex;gap:8px;align-items:center;}
+.reportbtns button{font-family:var(--eyebrow);background:var(--blue);color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;transition:opacity .15s;}
+.reportbtns button:hover{opacity:.85;}
+.month-nav button{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13px;}
+.month-nav strong{font-family:var(--eyebrow);font-size:13px;}
+
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;}
+.grid2{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+@media(max-width:800px){.grid,.grid2{grid-template-columns:repeat(2,1fr);}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;position:relative;overflow:hidden;box-shadow:0 1px 2px rgba(22,35,28,.04);}
+.kpi::before{content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:var(--green);}
+.kpi .label{font-family:var(--eyebrow);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);font-weight:700;}
+.kpi .val{font-family:var(--display);font-size:30px;margin-top:6px;color:var(--ink);}
+.kpi .note{font-size:12px;color:var(--mut);margin-top:4px;}
+.kpi.goal::before{background:var(--orange);} .kpi.goal .val{color:var(--green);}
+.kpi.warn::before{background:#B23B2E;} .kpi.warn .val{color:#B23B2E;}
+.kpi.won::before{background:var(--blue);} .kpi.won .val{color:var(--blue);}
+
+.barwrap{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:20px;}
+.barwrap .head{display:flex;justify-content:space-between;font-family:var(--eyebrow);font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;margin-bottom:10px;color:var(--green);}
+.bar{height:12px;background:var(--bg);border-radius:7px;overflow:hidden;border:1px solid var(--line);}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--orange));border-radius:7px 0 0 7px;transition:width .3s;}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:20px;}
+.panel h2{font-family:var(--eyebrow);font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--green);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line);}
+.formrow{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;margin-bottom:10px;}
+@media(max-width:800px){.formrow{grid-template-columns:1fr 1fr;}}
+.formrow input,.formrow select{padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:var(--body);}
+.formrow button{font-family:var(--eyebrow);background:var(--green);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;cursor:pointer;}
+
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;font-family:var(--eyebrow);font-size:10px;text-transform:uppercase;color:var(--mut);letter-spacing:.05em;padding:8px 6px;border-bottom:2px solid var(--green);}
+td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:middle;}
+tr:hover td{background:rgba(11,61,46,.03);}
+.tag{padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;display:inline-block;font-family:var(--eyebrow);}
+.tag.submitted{background:#E4F0E9;color:var(--green);}
+.tag.pipeline{background:#FDEBD9;color:var(--orange);}
+.tag.missed{background:#FBE4E1;color:#B23B2E;}
+.tag.won{background:#DCEAFB;color:var(--blue);}
+.tag.lost{background:#EDEBE5;color:var(--mut);}
+select.statusSel{border:none;background:transparent;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--eyebrow);}
+.del{background:none;border:none;color:var(--mut);cursor:pointer;font-size:14px;}
+.del:hover{color:#B23B2E;}
+.empty{color:var(--mut);font-size:13px;padding:24px 0;text-align:center;font-style:italic;}
+
+textarea{width:100%;min-height:90px;padding:12px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:monospace;resize:vertical;}
+.scorepanel{display:none;margin-top:14px;border-top:1px solid var(--line);padding-top:14px;}
+.scoregrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;margin-bottom:10px;}
+.verdict{display:inline-block;padding:5px 14px;border-radius:20px;font-weight:700;font-size:11px;font-family:var(--eyebrow);letter-spacing:.03em;text-transform:uppercase;}
+.verdict.GO{background:#E4F0E9;color:var(--green);}
+.verdict.SELECTIVE{background:#FDEBD9;color:var(--orange);}
+.verdict.AVOID{background:#FBE4E1;color:#B23B2E;}
+.crit{font-size:12px;padding:5px 0;border-bottom:1px dashed var(--line);}
+.loading{font-size:13px;color:var(--mut);padding:10px 0;}
+
+#loginScreen{max-width:400px;margin:14vh auto;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:36px 32px;text-align:center;box-shadow:0 8px 30px rgba(22,35,28,.08);position:relative;overflow:hidden;}
+#loginScreen::before{content:"";position:absolute;top:0;left:0;width:100%;height:6px;background:linear-gradient(90deg,var(--green),var(--orange),var(--blue));}
+#loginScreen h1{margin-bottom:2px;}
+#loginScreen input{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:8px;margin:16px 0;font-size:14px;font-family:var(--body);}
+#loginScreen button{width:100%;font-family:var(--eyebrow);background:var(--green);color:#fff;border:none;border-radius:8px;padding:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;font-size:12px;cursor:pointer;}
+#loginMsg{font-size:12px;color:var(--mut);margin-top:12px;}
+.who{font-family:var(--eyebrow);font-size:11px;color:var(--mut);margin-top:6px;text-transform:uppercase;letter-spacing:.03em;}
+.who button{background:none;border:none;color:var(--blue);cursor:pointer;text-decoration:underline;font-size:11px;font-family:var(--eyebrow);}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+// ---- Fill these in from Supabase → Project Settings → API ----
+const SUPABASE_URL = "https://vzwojojfbdtjlzijbqyu.supabase.co";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_ANON_PUBLIC_KEY_HERE";
+const ALLOWED_DOMAIN = "@ivyafrica.co.za";
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const STATUSES = ["pipeline","submitted","won","lost","missed"];
+
+let session = null;
+let rows = [];
+let currentMonth = new Date().toISOString().slice(0,7);
+
+function fmtR(n){ return "R "+Number(n||0).toLocaleString('en-ZA',{maximumFractionDigits:0}); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function monthLabel(m){ const [y,mo]=m.split('-'); return new Date(y,mo-1).toLocaleString('en-ZA',{month:'long',year:'numeric'}); }
+
+// ---------- AUTH ----------
+async function init(){
+  const { data } = await sb.auth.getSession();
+  session = data.session;
+  sb.auth.onAuthStateChange((event, s) => { session = s; renderRoot(); if(event==='SIGNED_IN') logLogin(); });
+  renderRoot();
+}
+
+async function logLogin(){
+  let city="", country="", ip="";
+  try{
+    const r = await fetch('https://ipapi.co/json/');
+    const j = await r.json();
+    city = j.city || ""; country = j.country_name || ""; ip = j.ip || "";
+  }catch(e){}
+  await sb.from('login_logs').insert({
+    email: session.user.email, ip_address: ip, city, country, user_agent: navigator.userAgent
+  });
+}
+
+async function sendMagicLink(email){
+  if(!email.endsWith(ALLOWED_DOMAIN)){
+    document.getElementById('loginMsg').textContent = `Use your ${ALLOWED_DOMAIN} email address.`;
+    return;
+  }
+  const { error } = await sb.auth.signInWithOtp({ email, options:{ emailRedirectTo: window.location.origin } });
+  document.getElementById('loginMsg').textContent = error ? error.message : "Check your inbox for the login link.";
+}
+
+function renderRoot(){
+  const app = document.getElementById('app');
+  if(!session){
+    app.innerHTML = `
+      <div id="loginScreen">
+        <h1>Ivy Africa</h1>
+        <div class="sub">Tender Portal — employees only</div>
+        <input id="emailInput" type="email" placeholder="you${ALLOWED_DOMAIN}" />
+        <button id="sendLinkBtn">Send login link</button>
+        <div id="loginMsg"></div>
+      </div>`;
+    document.getElementById('sendLinkBtn').onclick = () => sendMagicLink(document.getElementById('emailInput').value.trim());
+    return;
+  }
+  loadTenders();
+}
+
+// ---------- DATA ----------
+async function loadTenders(){
+  const start = currentMonth + "-01";
+  const [y,m] = currentMonth.split('-').map(Number);
+  const end = new Date(y, m, 1).toISOString().slice(0,10);
+  const { data, error } = await sb.from('tenders').select('*')
+    .gte('created_at', start).lt('created_at', end).order('deadline', {ascending:true});
+  rows = data || [];
+  render();
+  subscribeRealtime();
+}
+
+let channel = null;
+function subscribeRealtime(){
+  if(channel) sb.removeChannel(channel);
+  channel = sb.channel('tenders-changes').on('postgres_changes', { event:'*', schema:'public', table:'tenders' }, () => loadTenders()).subscribe();
+}
+
+async function addRow(name, entity, value, deadline, score){
+  if(!name) return;
+  await sb.from('tenders').insert({
+    name, entity, value: Number(value)||0, status:'pipeline', deadline: deadline||null,
+    score: score||null, logged_by_email: session.user.email
+  });
+}
+async function updateStatus(id, status){ await sb.from('tenders').update({ status, updated_at: new Date().toISOString() }).eq('id', id); }
+async function removeRow(id){ await sb.from('tenders').delete().eq('id', id); }
+
+function shiftMonth(delta){
+  const [y,m]=currentMonth.split('-').map(Number);
+  currentMonth = new Date(y,m-1+delta,1).toISOString().slice(0,7);
+  loadTenders();
+}
+
+function daysInMonth(m){ const [y,mo]=m.split('-').map(Number); return new Date(y,mo,0).getDate(); }
+function workingDaysSoFar(m){
+  const today=new Date(); const isCurrent = m === today.toISOString().slice(0,7);
+  const totalDays = isCurrent ? today.getDate() : daysInMonth(m);
+  let count=0; const [y,mo]=m.split('-').map(Number);
+  for(let d=1; d<=totalDays; d++){ const day=new Date(y,mo-1,d).getDay(); if(day!==0 && day!==6) count++; }
+  return count;
+}
+
+// ---------- SCORING ----------
+async function extractPdfText(file){
+  const buf = await file.arrayBuffer();
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const pdf = await window.pdfjsLib.getDocument({data: buf}).promise;
+  let text='';
+  for(let i=1;i<=pdf.numPages;i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(it=>it.str).join(' ') + '\n';
+  }
+  return text;
+}
+
+function wireScoring(){
+  const fileInput = document.getElementById('docFile');
+  const pasteArea = document.getElementById('docPaste');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  const scorePanel = document.getElementById('scorePanel');
+
+  analyzeBtn.onclick = async () => {
+    scorePanel.style.display='block';
+    scorePanel.innerHTML = '<div class="loading">Reading document and scoring against PFMA criteria...</div>';
+    try{
+      let text = pasteArea.value.trim();
+      if(!text && fileInput.files[0]){
+        const f = fileInput.files[0];
+        text = (f.type === 'application/pdf' || f.name.endsWith('.pdf')) ? await extractPdfText(f) : await f.text();
+      }
+      if(!text){ scorePanel.innerHTML = '<div class="loading">Upload a file or paste the tender text first.</div>'; return; }
+      const res = await fetch('/.netlify/functions/analyze', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text }) });
+      const result = JSON.parse(await res.text());
+      renderScoreCard(result);
+    }catch(e){
+      scorePanel.innerHTML = '<div class="loading">Could not score this document. Try pasting the text directly. ('+e.message+')</div>';
+    }
+  };
+}
+
+function renderScoreCard(r){
+  const scorePanel = document.getElementById('scorePanel');
+  scorePanel.innerHTML = `
+    <div class="scoregrid">
+      <div><strong>Entity:</strong> ${r.entity||"—"}</div>
+      <div><strong>Ref:</strong> ${r.refNumber||"—"}</div>
+      <div><strong>Closing:</strong> ${r.closingDate||"—"}</div>
+      <div><strong>Est. value:</strong> ${fmtR(r.estimatedValue)}</div>
+      <div><strong>Functionality score:</strong> ${r.estimatedFunctionalityScore}/100 (threshold ${r.functionalityThreshold})</div>
+      <div><strong>Meets threshold:</strong> ${r.meetsThreshold? 'Yes':'No'}</div>
+      <div><strong>Price/B-BBEE split:</strong> ${r.priceBBBEESplit||"—"}</div>
+      <div><span class="verdict ${r.verdict}">${r.verdict}</span></div>
+    </div>
+    <div style="font-size:13px;margin-bottom:10px;">${r.verdictReason||""}</div>
+    <div style="font-size:12px;font-weight:700;margin-bottom:4px;">Functionality criteria</div>
+    ${(r.functionalityCriteria||[]).map(c=>`<div class="crit">${c.name} — ${c.maxPoints} pts</div>`).join('') || '<div class="crit">None extracted</div>'}
+    <div style="font-size:12px;font-weight:700;margin:8px 0 4px;">Key gaps</div>
+    ${(r.keyGaps||[]).map(g=>`<div class="crit">${g}</div>`).join('') || '<div class="crit">None flagged</div>'}
+    <div style="margin-top:12px;"><button id="addScoredBtn" style="font-family:var(--eyebrow);background:var(--green);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;cursor:pointer;">Add to pipeline</button></div>
+  `;
+  document.getElementById('addScoredBtn').onclick = () => {
+    addRow(r.refNumber ? `${r.refNumber} — ${r.entity}` : r.entity, r.entity, r.estimatedValue, r.closingDate, r.estimatedFunctionalityScore);
+  };
+}
+
+// ---------- REPORTS ----------
+function download(filename, content){
+  const blob = new Blob([content], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+function buildReport(days, label){
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate()-days+1);
+  const cutoffStr = cutoff.toISOString().slice(0,10);
+  const subset = rows.filter(r => (r.created_at||"").slice(0,10) >= cutoffStr);
+  let out = `IVY AFRICA TENDER REPORT — ${label}\nGenerated: ${todayStr()}\nPeriod: ${cutoffStr} to ${todayStr()}\n\n`;
+  STATUSES.forEach(s=>{
+    const grp = subset.filter(r=>r.status===s);
+    const val = grp.reduce((a,r)=>a+Number(r.value),0);
+    out += `${s.toUpperCase()} (${grp.length}) — ${fmtR(val)}\n`;
+    grp.forEach(r=>{ out += `  - ${r.name} | ${r.entity||"—"} | ${fmtR(r.value)} | deadline ${r.deadline||"—"} | logged by ${r.logged_by_email||"—"}\n`; });
+    out += `\n`;
+  });
+  out += `TOTAL VALUE THIS PERIOD: ${fmtR(subset.reduce((a,r)=>a+Number(r.value),0))}\n`;
+  return out;
+}
+
+// ---------- RENDER ----------
+function render(){
+  const app=document.getElementById('app');
+  const submitted = rows.filter(r=>r.status==="submitted");
+  const pipeline = rows.filter(r=>r.status==="pipeline");
+  const missed = rows.filter(r=>r.status==="missed");
+  const won = rows.filter(r=>r.status==="won");
+  const lost = rows.filter(r=>r.status==="lost");
+  const totalValue = rows.reduce((s,r)=>s+Number(r.value),0);
+  const submittedValue = submitted.reduce((s,r)=>s+Number(r.value),0);
+  const wonValue = won.reduce((s,r)=>s+Number(r.value),0);
+  const goal = 10000000;
+  const pct = Math.min(100, (submittedValue/goal)*100);
+  const wd = workingDaysSoFar(currentMonth);
+  const target = wd*5;
+  const decided = won.length+lost.length;
+  const winRate = decided ? Math.round((won.length/decided)*100) : 0;
+
+  app.innerHTML = `
+    <div class="top">
+      <div>
+        <h1>Ivy Africa Tender Portal</h1>
+        <div class="sub">Target 5 submissions/day · R10M+ opportunity value/month</div>
+        <div class="who">Signed in as ${session.user.email} — <button id="logoutBtn">sign out</button></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="reportbtns"><button id="dailyBtn">Daily report</button><button id="weeklyBtn">Weekly report</button></div>
+        <div class="month-nav"><button id="prevM">←</button><strong>${monthLabel(currentMonth)}</strong><button id="nextM">→</button></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="kpi"><div class="label">Submitted</div><div class="val">${submitted.length}</div><div class="note">${fmtR(submittedValue)}</div></div>
+      <div class="kpi"><div class="label">In Pipeline</div><div class="val">${pipeline.length}</div><div class="note">${fmtR(pipeline.reduce((s,r)=>s+Number(r.value),0))}</div></div>
+      <div class="kpi ${missed.length?'warn':''}"><div class="label">Missed</div><div class="val">${missed.length}</div><div class="note">${fmtR(missed.reduce((s,r)=>s+Number(r.value),0))}</div></div>
+      <div class="kpi goal"><div class="label">Total Opportunity Value</div><div class="val">${fmtR(totalValue)}</div><div class="note">Goal: ${fmtR(goal)}</div></div>
+    </div>
+    <div class="grid2">
+      <div class="kpi won"><div class="label">Won</div><div class="val">${won.length}</div><div class="note">${fmtR(wonValue)}</div></div>
+      <div class="kpi"><div class="label">Lost</div><div class="val">${lost.length}</div><div class="note">${fmtR(lost.reduce((s,r)=>s+Number(r.value),0))}</div></div>
+      <div class="kpi"><div class="label">Win rate</div><div class="val">${winRate}%</div><div class="note">${decided} decided</div></div>
+    </div>
+
+    <div class="barwrap">
+      <div class="head"><span>Value goal progress (submitted)</span><span>${fmtR(submittedValue)} / ${fmtR(goal)} (${pct.toFixed(1)}%)</span></div>
+      <div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="barwrap">
+      <div class="head"><span>Daily cadence (5/working day)</span><span style="color:${submitted.length>=target?'#0B3D2E':'#B23B2E'}">${submitted.length} submitted vs ${target} target (${wd} working days elapsed)</span></div>
+      <div class="bar"><div class="bar-fill" style="width:${Math.min(100,(submitted.length/Math.max(1,target))*100)}%;background:${submitted.length>=target?'linear-gradient(90deg,#0B3D2E,#1B4F8C)':'linear-gradient(90deg,#E8722C,#B23B2E)'}"></div></div>
+    </div>
+
+    <div class="panel">
+      <h2>Score a tender document</h2>
+      <input type="file" id="docFile" accept=".pdf,.txt" style="margin-bottom:8px;" />
+      <textarea id="docPaste" placeholder="Or paste tender text here..."></textarea>
+      <div style="margin-top:8px;"><button id="analyzeBtn" style="font-family:var(--eyebrow);background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;cursor:pointer;">Analyze & score</button></div>
+      <div id="scorePanel" class="scorepanel"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Add tender manually</h2>
+      <div class="formrow">
+        <input id="fName" placeholder="Tender name / RFQ ref" />
+        <input id="fEntity" placeholder="Entity" />
+        <input id="fValue" placeholder="Value (R)" type="number" />
+        <input id="fDeadline" placeholder="Deadline" type="date" />
+        <button id="fAdd">Add</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Tenders — ${monthLabel(currentMonth)}</h2>
+      ${rows.length===0 ? '<div class="empty">No tenders logged yet this month.</div>' : `
+      <table>
+        <thead><tr><th>Tender</th><th>Entity</th><th>Value</th><th>Score</th><th>Deadline</th><th>Logged by</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          ${rows.map(r=>`
+            <tr>
+              <td>${r.name}</td><td>${r.entity||"—"}</td><td>${fmtR(r.value)}</td>
+              <td>${r.score!=null?r.score:'—'}</td><td>${r.deadline||"—"}</td><td style="font-size:11px;">${r.logged_by_email||"—"}</td>
+              <td><span class="tag ${r.status}"><select class="statusSel" data-id="${r.id}">
+                ${STATUSES.map(s=>`<option value="${s}" ${s===r.status?'selected':''}>${s}</option>`).join('')}
+              </select></span></td>
+              <td><button class="del" data-id="${r.id}">✕</button></td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`}
+    </div>
+  `;
+
+  document.getElementById('logoutBtn').onclick = () => sb.auth.signOut();
+  document.getElementById('prevM').onclick = ()=>shiftMonth(-1);
+  document.getElementById('nextM').onclick = ()=>shiftMonth(1);
+  document.getElementById('dailyBtn').onclick = ()=>download(`tender-daily-${todayStr()}.txt`, buildReport(1,'Daily'));
+  document.getElementById('weeklyBtn').onclick = ()=>download(`tender-weekly-${todayStr()}.txt`, buildReport(7,'Weekly'));
+  document.getElementById('fAdd').onclick = ()=>{
+    addRow(document.getElementById('fName').value.trim(), document.getElementById('fEntity').value.trim(),
+      document.getElementById('fValue').value, document.getElementById('fDeadline').value);
+  };
+  document.querySelectorAll('.statusSel').forEach(sel=>{ sel.onchange = e => updateStatus(e.target.dataset.id, e.target.value); });
+  document.querySelectorAll('.del').forEach(btn=>{ btn.onclick = e => removeRow(e.target.dataset.id); });
+  wireScoring();
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js'));
+}
+
+init();
+</script>
+</body>
+</html>

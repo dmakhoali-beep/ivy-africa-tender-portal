@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ivy Africa — Opportunity Pipeline</title>
+<link rel="manifest" href="/manifest.json" />
+<meta name="theme-color" content="#0B3D2E" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --green:#0B3D2E; --orange:#E8722C; --blue:#1B4F8C;
+  --bg:#F5F3EC; --card:#FFFFFF; --line:#E4E0D4; --ink:#16231C; --mut:#6E7368;
+  --display:'DM Serif Display', Georgia, serif;
+  --eyebrow:'Syne', system-ui, sans-serif;
+  --body:'DM Sans', system-ui, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:var(--body);}
+body{background:var(--bg);color:var(--ink);}
+#app{max-width:1100px;margin:0 auto;padding:28px 20px 60px;}
+h1{font-family:var(--display);font-size:28px;font-weight:400;color:var(--green);}
+.sub{font-family:var(--eyebrow);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin-top:6px;font-weight:600;}
+.top{margin-bottom:24px;padding-bottom:18px;border-bottom:2px solid var(--green);display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;}
+.back{font-family:var(--eyebrow);font-size:11px;text-transform:uppercase;color:var(--blue);text-decoration:none;font-weight:700;}
+
+.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.filters button{font-family:var(--eyebrow);font-size:11px;text-transform:uppercase;font-weight:700;letter-spacing:.03em;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);cursor:pointer;}
+.filters button.active{background:var(--green);color:#fff;border-color:var(--green);}
+
+.row{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-bottom:10px;cursor:pointer;transition:box-shadow .15s;}
+.row:hover{box-shadow:0 2px 10px rgba(22,35,28,.06);}
+.row-head{display:flex;justify-content:space-between;align-items:center;gap:12px;}
+.row-name{font-weight:700;font-size:14px;}
+.row-entity{font-size:12px;color:var(--mut);margin-top:2px;}
+.row-right{display:flex;align-items:center;gap:14px;}
+.score{font-family:var(--display);font-size:20px;}
+.verdict{font-family:var(--eyebrow);font-size:10px;text-transform:uppercase;font-weight:700;letter-spacing:.04em;padding:4px 11px;border-radius:20px;}
+.verdict.go{background:#E4F0E9;color:var(--green);}
+.verdict.sel{background:#FDEBD9;color:var(--orange);}
+.verdict.avoid{background:#FBE4E1;color:#B23B2E;}
+.chev{color:var(--mut);transition:transform .15s;font-size:12px;}
+.row.open .chev{transform:rotate(90deg);}
+.score-wrap{position:relative;display:inline-flex;align-items:center;}
+.score-wrap:hover .why-tip{opacity:1;visibility:visible;transform:translateY(0);}
+.why-tip{position:absolute;bottom:calc(100% + 8px);right:-10px;width:260px;background:var(--ink);color:#fff;font-family:var(--body);font-size:11.5px;line-height:1.45;padding:12px 14px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);opacity:0;visibility:hidden;transform:translateY(4px);transition:opacity .15s,transform .15s;z-index:20;text-transform:none;letter-spacing:normal;font-weight:400;pointer-events:none;}
+.why-tip::after{content:"";position:absolute;top:100%;right:16px;border:6px solid transparent;border-top-color:var(--ink);}
+.why-label{font-family:var(--eyebrow);font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:#B8D9C7;font-weight:700;display:block;margin-bottom:4px;}
+
+.detail{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:13px;}
+.row.open .detail{display:block;}
+.detail dl{display:grid;grid-template-columns:140px 1fr;gap:6px 10px;margin-bottom:10px;}
+.detail dt{font-family:var(--eyebrow);font-size:10px;text-transform:uppercase;color:var(--mut);font-weight:700;letter-spacing:.03em;}
+.detail dd{color:var(--ink);}
+.gates{margin:10px 0;}
+.gates div{padding:4px 0;border-bottom:1px dashed var(--line);}
+.addbtn{font-family:var(--eyebrow);background:var(--green);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;cursor:pointer;margin-top:8px;}
+.addbtn:disabled{opacity:.5;cursor:default;}
+.msg{font-size:11px;color:var(--mut);margin-top:6px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const SUPABASE_URL = "https://vzwojojfbdtjlzijbqyu.supabase.co";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_ANON_PUBLIC_KEY_HERE";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const OPPORTUNITIES = [
+  { name:"Ikhala TVET — EON XR VR/AI Lab", entity:"Ikhala TVET College", ref:"IKHALA-SPEC-PH1-2026", score:9.8, verdict:"go",
+    closing:"Phase 1 execution (MoA in force)", value:null,
+    scope:"Turnkey supply, delivery and installation of a 30-student VR/AI lab: workstations, Meta Quest 3 headsets, iPads, Android tablets, networking, UPS and lab furniture, under the merSETA EON XR programme.",
+    gates:["Three-quote rule per item category","CSD registration, B-BBEE preference under PPPFA","Every PO/invoice must reference MoA DGYR26 / ID N000100758","Close-out packet: asset register, network test report, signed delivery report"],
+    contact:"Ikhala TVET College SCM" },
+  { name:"SITA — Network Hardware & Cabling", entity:"SITA SOC Ltd", ref:"RFB 3261-2026", score:9.4, verdict:"go",
+    closing:"27 Jul 2026, 11:00", value:null,
+    scope:"5-year transversal contract for Ethernet switches, wireless LAN, routers, backhaul, and structured copper/fibre cabling.",
+    gates:["Final clarification 17 Jul 2026","Submit via SITA-ERP Oracle Portal only"],
+    contact:"Lunathi Mqalo — SCMcontractmanagement@sita.co.za / 012 367 3412" },
+  { name:"SITA — VMware Enterprise Licensing", entity:"SITA SOC Ltd (for Dept. Water & Sanitation)", ref:"RFB 3259-2026 / ERP 424011", score:9.1, verdict:"go",
+    closing:"23 Jul 2026", value:null,
+    scope:"36-month VMware enterprise licensing agreement — upgrades, installation, configuration, maintenance and support.",
+    gates:["Standard SITA SCM process"],
+    contact:"Lungile Sibiya — Lungile.sibiya@sita.co.za / 012 482 2006" },
+  { name:"Ikhala TVET — Electrical Renewable Equipment", entity:"Ikhala TVET College", ref:"ITVETC-003/07/2026", score:8.8, verdict:"go",
+    closing:"27 Jul 2026, 11:00", value:null,
+    scope:"Supply and delivery of hybrid solar training systems, roof tile hooks, multi-rails, inverters and solar charge controllers for Ezibeleni Engineering Campus.",
+    gates:["Site briefing held 07 Jul (MS Teams)","Clarification deadline 23 Jul, 13:00","Physical submission + USB drive to tender box"],
+    contact:"Nkosinathi Futshane — nkosinathi.futshane@ikhala.edu.za / 047 873 8811" },
+  { name:"Western Cape Mobility — AWS Cloud Hosting", entity:"Western Cape Dept of Mobility", ref:"MT01/2026", score:8.8, verdict:"go",
+    closing:"17 Jul 2026, 11:00", value:null,
+    scope:"3-year term contract for AWS cloud hosting and related managed services. Strong strategic fit with cloud/AWS partnership ambitions.",
+    gates:["70% functionality threshold before price is evaluated","80/20 preference points","No compulsory briefing","Full 86-page bid document must be returned","Physical submission in Cape Town required"],
+    contact:"—" },
+  { name:"SENTECH — Enterprise Development Support", entity:"SENTECH", ref:"—", score:8.6, verdict:"go",
+    closing:"29 Jul 2026", value:null,
+    scope:"Innovation and digital solutions support for 4IR-aligned SMMEs.",
+    gates:["Turnover under R10m","100% Black-owned","Detailed technical 4IR proposal and budget plan required"],
+    contact:"—" },
+  { name:"AgriSETA — Digital Certificate System", entity:"AgriSETA", ref:"AGRISETA/2026/02", score:8.3, verdict:"sel",
+    closing:"10 Jul 2026, 11:00", value:null,
+    scope:"36–48 month implementation, licensing, migration and support of a tamper-proof document management and digital certificate system (PKI/SHA-256, QR verification, ETL migration).",
+    gates:["Mandatory valid OEM partnership letter — CONDITIONAL on securing this","3+ IT personnel CVs, NQF6+, 5+ yrs experience","Two-envelope principle — pricing sealed separately","75/100 functionality threshold, 80/20 split"],
+    contact:"—" },
+  { name:"TIA — Lenovo ThinkPad Supply", entity:"Technology Innovation Agency", ref:"RFQ", score:8.1, verdict:"go",
+    closing:"14 Jul 2026, 11:00", value:75000,
+    scope:"Supply and delivery of 1x Lenovo ThinkPad X1 Carbon Gen 14 Aura Edition — Intel Core Ultra 7, 32GB RAM, 1TB SSD, 5G/4G LTE, 5-year onsite warranty.",
+    gates:["Standard CSD registration and SBD forms"],
+    contact:"Bongani Mtshali — Bongani.mtshali@tia.org.za" },
+  { name:"CSIR — RFP 6730/16/07/2026", entity:"CSIR", ref:"RFP 6730/16/07/2026", score:8.0, verdict:"sel",
+    closing:"16 Jul 2026", value:null,
+    scope:"Scope of work not yet confirmed — only procurement conditions available so far. Potential score 7.5–9.0 depending on whether scope falls within AI, ICT, cloud, software, digital transformation, infrastructure or cybersecurity.",
+    gates:["REVIEW REQUIRED — request full scope of work before committing resources"],
+    contact:"—" },
+  { name:"National Arts Council — Digital Marketing", entity:"National Arts Council", ref:"—", score:7.9, verdict:"sel",
+    closing:"09 Jul 2026 (verify still open)", value:null,
+    scope:"Digital marketing services for the National Arts Council.",
+    gates:["Confirm closing date has not lapsed before preparing a submission"],
+    contact:"—" },
+  { name:"TIKZN — Advanced MS Suite Training", entity:"Trade & Investment KZN", ref:"RFQ20262718/", score:7.5, verdict:"go",
+    closing:"13 Jul 2026, 12:00", value:null,
+    scope:"Virtual delivery of Advanced Excel, PowerPoint and Word training for 12 staff over 4–5 days.",
+    gates:["Entity accreditation proof","Facilitator accreditation proof + CV","SBD 1, SBD 4, SBD 6.1, POPIA consent"],
+    contact:"quotations@tikzn.co.za" },
+  { name:"TIKZN — Virtual Brand Management Training", entity:"Trade & Investment KZN", ref:"RFQ20262717/", score:7.0, verdict:"go",
+    closing:"13 Jul 2026, 12:00", value:null,
+    scope:"Virtual brand management training for 3 staff over 4 days.",
+    gates:["Entity accreditation proof","Facilitator accreditation proof + CV","SBD 1, SBD 4, SBD 6.1, POPIA consent"],
+    contact:"quotations@tikzn.co.za" },
+  { name:"Ikhala TVET — ISO 9001:2015 Phase 2 Pilot", entity:"Ikhala TVET College", ref:"TOR (no bid number)", score:6.5, verdict:"sel",
+    closing:"Undefined (briefing was 07 Jul)", value:null,
+    scope:"7-month QMS implementation pilot across Central Office and 3 campuses (Queenstown, Aliwal North, Ezibeleni), targeting Stage 1/2 certification readiness by Dec 2026.",
+    gates:["75% functionality threshold","Possible requirement for corporate ISO 9001 certification — confirm in writing before committing","Multi-site process standardisation unclear"],
+    contact:"Ikhala TVET College QA Department" },
+  { name:"W&RSETA — Marketing & Branding Materials", entity:"W&RSETA", ref:"—", score:5.8, verdict:"sel",
+    closing:"21 Jul 2026", value:null,
+    scope:"36-month contract for promotional items, notebooks and print materials across national offices.",
+    gates:["5+ years branding experience","5 specific reference letters"],
+    contact:"—" },
+  { name:"JoGEDA — Specialist: Business Development", entity:"JoGEDA", ref:"—", score:4.5, verdict:"avoid",
+    closing:"07 Jul 2026 (closed)", value:null,
+    scope:"5-year fixed-term employment contract — SMME growth, transaction structuring, investment readiness in the Eastern Cape public sector.",
+    gates:["Bachelor's degree, 5+ years experience","Valid driver's licence","MFMA/Treasury knowledge"],
+    contact:"—" },
+  { name:"Agrément South Africa — Certification Digitalisation", entity:"Agrément SA", ref:"ASA 07/06/2026", score:4.0, verdict:"avoid",
+    closing:"15 Jul 2026, 12:00 (briefing was 08 Jul)", value:null,
+    scope:"36-month web-based secure QR-code certification platform with database integration.",
+    gates:["Compulsory physical briefing — verify attendance was recorded","3+ digitalisation reference letters","CSD, SBD 4, SBD 6.1, GCC"],
+    contact:"procurement@agrement.co.za" },
+  { name:"merSETA — Enterprise Licences", entity:"merSETA", ref:"RFQ-ICT-26-27-058", score:0, verdict:"avoid",
+    closing:"07 Jul 2026, 12:00 (CLOSED)", value:null,
+    scope:"Provision of five enterprise licences for 24 months.",
+    gates:["CLOSED — archive unless an extension is announced"],
+    contact:"—" },
+  { name:"merSETA — Data Governance & Architecture", entity:"merSETA", ref:"—", score:0, verdict:"avoid",
+    closing:"08 Jul 2026, 12:00 (CLOSED)", value:null,
+    scope:"Data governance and architecture services, standard 80/20 evaluation.",
+    gates:["CLOSED — archive unless an extension is announced"],
+    contact:"—" },
+  { name:"DFFE — Business Coaching Programme", entity:"DFFE", ref:"—", score:3.0, verdict:"avoid",
+    closing:"14 Jul 2026", value:null,
+    scope:"Professional business coaching programme delivery.",
+    gates:["Mandatory ICF and ACSTH accreditation"],
+    contact:"—" },
+  { name:"Department of Tourism — Office Management Training", entity:"Dept of Tourism", ref:"NB079/2026", score:3.0, verdict:"avoid",
+    closing:"08 Jul 2026, 11:00 (closed)", value:null,
+    scope:"NQF Level 5 online office management training for 1 official.",
+    gates:["SBD 4, full CSD report","Proof of Women/Black ownership for points"],
+    contact:"quotationsscm@tourism.gov.za" },
+  { name:"HSRC — Eventee App Subscription", entity:"HSRC", ref:"—", score:2.5, verdict:"avoid",
+    closing:"09 Jul 2026", value:null,
+    scope:"12-month single-team licence for Eventee conference management software.",
+    gates:["Urgent turnaround, very low volume (1 licence)"],
+    contact:"—" },
+  { name:"C-BRTA — DirectHire Software Renewal", entity:"C-BRTA", ref:"RFP 19-06-2026", score:2.0, verdict:"avoid",
+    closing:"09 Jul 2026", value:null,
+    scope:"24-month renewal, support and maintenance of recruitment software.",
+    gates:["Mandatory certified SAGE Business Partner status","Mandatory MCI Authorised DirectHire Reseller status"],
+    contact:"—" },
+  { name:"Postbank — 2026 Annual Report Design & Print", entity:"Postbank SOC Ltd", ref:"RFQ 08/2026", score:2.0, verdict:"avoid",
+    closing:"08 Jul 2026, 11:00 (closed)", value:null,
+    scope:"Concept, layout (180–200 pages), editing and printing of 40 copies plus branded corporate gifts.",
+    gates:["5+ years company experience","3 reference letters, under 12 months old","CVs: Creative Director, PM, Copywriter, Editor"],
+    contact:"RFQ.ProcurementSN@Postbank.co.za" },
+  { name:"Sibanyoni Still Waters — Hydraulic Power Units", entity:"Sibanyoni Still Waters", ref:"—", score:1.0, verdict:"avoid",
+    closing:"—", value:null,
+    scope:"Industrial hydraulic power unit supply — outside core ICT/EdTech focus.",
+    gates:["Non-core"],
+    contact:"—" }
+];
+
+const WHY = {
+  "Ikhala TVET — EON XR VR/AI Lab": "Already active under an executed MoA with dedicated merSETA funding — no competitive bid risk, this is pure execution against a signed contract.",
+  "SITA — Network Hardware & Cabling": "5-year transversal contract with a standard e-portal process; strong volume and margin fit for existing ICT hardware distribution.",
+  "SITA — VMware Enterprise Licensing": "36-month licensing revenue with low compliance friction; matches existing ICT reseller/partner capability directly.",
+  "Ikhala TVET — Electrical Renewable Equipment": "High-volume goods supply matching existing hardware distribution channels; the physical USB submission is a manageable, not disqualifying, hurdle.",
+  "Western Cape Mobility — AWS Cloud Hosting": "3-year cloud hosting contract directly aligned to the AWS/cloud growth strategy, but scored just below top tier since it requires demonstrable AWS delivery references not yet confirmed on file.",
+  "SENTECH — Enterprise Development Support": "Grant-type enterprise development funding matches the B-BBEE Level 1, 100% Black-owned profile and turnover threshold almost exactly.",
+  "AgriSETA — Digital Certificate System": "Strong 36–48 month multi-year value, but the mandatory OEM partnership letter is a hard gate not yet secured — score reflects conditional upside.",
+  "TIA — Lenovo ThinkPad Supply": "Small, fast, low-friction transactional hardware quote with standard compliance only; near-guaranteed win for minimal effort, capped by low value.",
+  "CSIR — RFP 6730/16/07/2026": "Only procurement conditions are available, not the scope of work — score is a placeholder mid-point pending confirmation the scope sits in AI/ICT/cloud/cyber.",
+  "National Arts Council — Digital Marketing": "Good strategic fit for digital marketing capability, but the closing date needs urgent verification it hasn't already lapsed — score discounted for that uncertainty.",
+  "TIKZN — Advanced MS Suite Training": "Fully virtual delivery keeps overhead low and matches training delivery capability directly; accreditation proof is procedural, not a hard barrier.",
+  "TIKZN — Virtual Brand Management Training": "Same virtual-delivery advantage as the MS Suite bid, scored slightly lower purely on smaller scale (3 staff vs 12).",
+  "Ikhala TVET — ISO 9001:2015 Phase 2 Pilot": "Matches the ISO/PECB portfolio ambition, but score is capped pending written clarification on whether corporate (not just individual) ISO 9001 certification is mandatory.",
+  "W&RSETA — Marketing & Branding Materials": "Long 36-month term keeps this from being a total pass, but it's non-core print/branding work outside the primary ICT/EdTech focus.",
+  "JoGEDA — Specialist: Business Development": "Strong leadership and public-sector fit, but the closing date (07 Jul) has passed — scored for future reference only.",
+  "Agrément South Africa — Certification Digitalisation": "High long-term contract value, but the compulsory physical briefing attendance is unconfirmed — score is discounted heavily for disqualification risk.",
+  "merSETA — Enterprise Licences": "Closing date (07 Jul, 12:00) has passed with no confirmed extension — archived at zero.",
+  "merSETA — Data Governance & Architecture": "Closing date (08 Jul, 12:00) has passed with no confirmed extension — archived at zero.",
+  "DFFE — Business Coaching Programme": "Mandatory ICF/ACSTH accreditation is not held — this is a near-automatic disqualifier regardless of other fit.",
+  "Department of Tourism — Office Management Training": "Closing date has passed, and even if reopened the scope (1 official) carries minimal revenue impact.",
+  "HSRC — Eventee App Subscription": "Single license, minimal margin, and very low strategic value — barely worth the administrative effort to submit.",
+  "C-BRTA — DirectHire Software Renewal": "Mandatory SAGE and MCI reseller badges are not held — this is a hard disqualifier at the documentation-check stage.",
+  "Postbank — 2026 Annual Report Design & Print": "Closing date has passed, and it was non-core print/design work outside primary capability regardless.",
+  "Sibanyoni Still Waters — Hydraulic Power Units": "Industrial hydraulic equipment sits entirely outside the ICT/EdTech core business — essentially a non-starter."
+};
+let activeFilter = "all";
+
+function fmtR(n){ return n ? "R "+Number(n).toLocaleString('en-ZA') : "Not stated"; }
+
+function render(){
+  const app = document.getElementById('app');
+  const list = OPPORTUNITIES
+    .filter(o => activeFilter === "all" || o.verdict === activeFilter)
+    .sort((a,b) => b.score - a.score);
+
+  app.innerHTML = `
+    <div class="top">
+      <div>
+        <h1>Opportunity Pipeline</h1>
+        <div class="sub">Click any row for full tender detail</div>
+      </div>
+      <a class="back" href="/">← Back to portal</a>
+    </div>
+    <div class="filters">
+      ${["all","go","sel","avoid"].map(f => `
+        <button data-f="${f}" class="${activeFilter===f?'active':''}">${f==="all"?"All":VERDICT_LABEL[f]}</button>
+      `).join('')}
+    </div>
+    <div id="rows"></div>
+  `;
+
+  document.querySelectorAll('.filters button').forEach(b => {
+    b.onclick = () => { activeFilter = b.dataset.f; render(); };
+  });
+
+  const rowsEl = document.getElementById('rows');
+  rowsEl.innerHTML = list.map((o, i) => `
+    <div class="row" data-i="${i}">
+      <div class="row-head">
+        <div>
+          <div class="row-name">${o.name}</div>
+          <div class="row-entity">${o.entity} ${o.ref !== "—" ? "· " + o.ref : ""}</div>
+        </div>
+        <div class="row-right">
+          <span class="verdict ${o.verdict}">${VERDICT_LABEL[o.verdict]}</span>
+          <span class="score-wrap">
+            <span class="score">${o.score}</span>
+            <span class="why-tip"><span class="why-label">Why this score</span>${WHY[o.name] || "Justification not yet documented."}</span>
+          </span>
+          <span class="chev">▶</span>
+        </div>
+      </div>
+      <div class="detail">
+        <dl>
+          <dt>Closing</dt><dd>${o.closing}</dd>
+          <dt>Value</dt><dd>${fmtR(o.value)}</dd>
+          <dt>Contact</dt><dd>${o.contact}</dd>
+          <dt>Why this score</dt><dd>${WHY[o.name] || "Justification not yet documented."}</dd>
+        </dl>
+        <p>${o.scope}</p>
+        <div class="gates">${o.gates.map(g => `<div>${g}</div>`).join('')}</div>
+        <button class="addbtn" data-add="${i}">Add to pipeline board</button>
+        <div class="msg" data-msg="${i}"></div>
+      </div>
+    </div>
+  `).join('');
+
+  rowsEl.querySelectorAll('.row').forEach(row => {
+    row.addEventListener('click', (e) => {
+      if(e.target.closest('.addbtn')) return;
+      row.classList.toggle('open');
+    });
+  });
+
+  rowsEl.querySelectorAll('[data-add]').forEach(btn => {
+    btn.onclick = async () => {
+      const o = list[Number(btn.dataset.add)];
+      btn.disabled = true;
+      const msg = rowsEl.querySelector(`[data-msg="${btn.dataset.add}"]`);
+      const { error } = await sb.from('tenders').insert({
+        name: o.name, entity: o.entity, value: o.value || 0, status: 'pipeline', deadline: null
+      });
+      msg.textContent = error ? error.message : "Added to the tender portal.";
+    };
+  });
+}
+
+render();
+</script>
+</body>
+</html>
