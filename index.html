@@ -204,10 +204,13 @@ async function editSubmittedDate(id, current){
 }
 async function removeRow(id){ await sb.from('tenders').delete().eq('id', id); }
 
+let navLocked = false;
 function shiftMonth(delta){
+  if(navLocked) return;
+  navLocked = true;
   const [y,m]=currentMonth.split('-').map(Number);
   currentMonth = new Date(y,m-1+delta,1).toISOString().slice(0,7);
-  loadTenders();
+  loadTenders().finally(()=>{ navLocked = false; });
 }
 
 function daysInMonth(m){ const [y,mo]=m.split('-').map(Number); return new Date(y,mo,0).getDate(); }
@@ -333,7 +336,7 @@ function render(){
       </div>
       <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;">
         <div class="reportbtns"><button id="dailyBtn">Daily report</button><button id="weeklyBtn">Weekly report</button></div>
-        <div class="month-nav"><button id="prevM">←</button><strong>${monthLabel(currentMonth)}</strong><button id="nextM">→</button></div>
+        <div class="month-nav"><button id="prevM" ${navLocked?'disabled':''}>←</button><strong>${monthLabel(currentMonth)}</strong><button id="nextM" ${navLocked?'disabled':''}>→</button></div>
       </div>
     </div>
 
