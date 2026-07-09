@@ -6,7 +6,7 @@
 <title>Ivy Africa Tender Portal</title>
 <link rel="manifest" href="/manifest.json" />
 <meta name="theme-color" content="#0B3D2E" />
-<link rel="apple-touch-icon" href="/icon-192.png" />
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
@@ -162,12 +162,15 @@ function renderRoot(){
 }
 
 // ---------- DATA ----------
+let loadSeq = 0;
 async function loadTenders(){
+  const seq = ++loadSeq;
   const start = currentMonth + "-01";
   const [y,m] = currentMonth.split('-').map(Number);
   const end = new Date(y, m, 1).toISOString().slice(0,10);
   const { data, error } = await sb.from('tenders').select('*')
     .gte('created_at', start).lt('created_at', end).order('deadline', {ascending:true});
+  if(seq !== loadSeq) return; // a newer request (from clicking prev/next again) already superseded this one
   rows = data || [];
   render();
   subscribeRealtime();
@@ -175,8 +178,10 @@ async function loadTenders(){
 
 let channel = null;
 function subscribeRealtime(){
-  if(channel) sb.removeChannel(channel);
-  channel = sb.channel('tenders-changes').on('postgres_changes', { event:'*', schema:'public', table:'tenders' }, () => loadTenders()).subscribe();
+  try{
+    if(channel){ sb.removeChannel(channel); channel = null; }
+    channel = sb.channel('tenders-changes-'+Date.now()).on('postgres_changes', { event:'*', schema:'public', table:'tenders' }, () => loadTenders()).subscribe();
+  }catch(e){ console.warn('realtime subscribe skipped', e); }
 }
 
 async function addRow(name, entity, value, deadline, score){
@@ -186,7 +191,17 @@ async function addRow(name, entity, value, deadline, score){
     score: score||null, logged_by_email: session.user.email
   });
 }
-async function updateStatus(id, status){ await sb.from('tenders').update({ status, updated_at: new Date().toISOString() }).eq('id', id); }
+async function updateStatus(id, status){
+  const patch = { status, updated_at: new Date().toISOString() };
+  const row = rows.find(r=>r.id===id);
+  if(status === 'submitted' && row && !row.submitted_date) patch.submitted_date = todayStr();
+  await sb.from('tenders').update(patch).eq('id', id);
+}
+async function editSubmittedDate(id, current){
+  const val = prompt("Submitted date (YYYY-MM-DD):", current || todayStr());
+  if(val === null) return;
+  await sb.from('tenders').update({ submitted_date: val || null }).eq('id', id);
+}
 async function removeRow(id){ await sb.from('tenders').delete().eq('id', id); }
 
 function shiftMonth(delta){
@@ -366,12 +381,14 @@ function render(){
       <h2>Tenders — ${monthLabel(currentMonth)}</h2>
       ${rows.length===0 ? '<div class="empty">No tenders logged yet this month.</div>' : `
       <table>
-        <thead><tr><th>Tender</th><th>Entity</th><th>Value</th><th>Score</th><th>Deadline</th><th>Logged by</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Tender</th><th>Entity</th><th>Value</th><th>Score</th><th>Closing</th><th>Submitted</th><th>Logged by</th><th>Status</th><th></th></tr></thead>
         <tbody>
           ${rows.map(r=>`
             <tr>
               <td>${r.name}</td><td>${r.entity||"—"}</td><td>${fmtR(r.value)}</td>
-              <td>${r.score!=null?r.score:'—'}</td><td>${r.deadline||"—"}</td><td style="font-size:11px;">${r.logged_by_email||"—"}</td>
+              <td>${r.score!=null?r.score:'—'}</td><td>${r.deadline||"—"}</td>
+              <td><span class="editdate" data-editdate="${r.id}" data-current="${r.submitted_date||''}" style="cursor:pointer;text-decoration:underline dotted;">${r.submitted_date||"—"}</span></td>
+              <td style="font-size:11px;">${r.logged_by_email||"—"}</td>
               <td><span class="tag ${r.status}"><select class="statusSel" data-id="${r.id}">
                 ${STATUSES.map(s=>`<option value="${s}" ${s===r.status?'selected':''}>${s}</option>`).join('')}
               </select></span></td>
@@ -392,6 +409,7 @@ function render(){
       document.getElementById('fValue').value, document.getElementById('fDeadline').value);
   };
   document.querySelectorAll('.statusSel').forEach(sel=>{ sel.onchange = e => updateStatus(e.target.dataset.id, e.target.value); });
+  document.querySelectorAll('.editdate').forEach(sp=>{ sp.onclick = e => editSubmittedDate(e.target.dataset.editdate, e.target.dataset.current); });
   document.querySelectorAll('.del').forEach(btn=>{ btn.onclick = e => removeRow(e.target.dataset.id); });
   wireScoring();
 }
