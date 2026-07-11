@@ -29,12 +29,21 @@ body{background:
 #app{min-height:100vh;max-width:1180px;margin:0 auto;padding:28px 20px 60px;}
 h1{font-family:var(--display);font-size:30px;font-weight:400;letter-spacing:-.01em;color:var(--green);}
 .sub{font-family:var(--eyebrow);color:var(--mut);font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-top:6px;font-weight:600;}
-.top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:26px;flex-wrap:wrap;gap:12px;padding-bottom:20px;border-bottom:2px solid var(--green);}
+.top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;flex-wrap:wrap;gap:12px;padding-bottom:20px;border-bottom:2px solid var(--green);}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand img{width:44px;height:44px;border-radius:50%;}
 .reportbtns,.month-nav{display:flex;gap:8px;align-items:center;}
 .reportbtns button{font-family:var(--eyebrow);background:var(--blue);color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;transition:opacity .15s;}
 .reportbtns button:hover{opacity:.85;}
 .month-nav button{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13px;}
+.month-nav button:disabled{opacity:.4;cursor:default;}
 .month-nav strong{font-family:var(--eyebrow);font-size:13px;}
+
+.tabbar{display:flex;gap:6px;margin-bottom:22px;border-bottom:1px solid var(--line);}
+.tabbar button{font-family:var(--eyebrow);background:none;border:none;padding:12px 18px;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--mut);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s;}
+.tabbar button:hover{color:var(--ink);}
+.tabbar button.active{color:var(--green);border-bottom-color:var(--orange);}
+.tabbar button .pill{display:inline-block;margin-left:6px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:1px 7px;font-size:10px;color:var(--mut);}
 
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;}
 .grid2{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
@@ -87,12 +96,17 @@ textarea{width:100%;min-height:90px;padding:12px;border:1px solid var(--line);bo
 
 #loginScreen{max-width:400px;margin:14vh auto;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:36px 32px;text-align:center;box-shadow:0 8px 30px rgba(22,35,28,.08);position:relative;overflow:hidden;}
 #loginScreen::before{content:"";position:absolute;top:0;left:0;width:100%;height:6px;background:linear-gradient(90deg,var(--green),var(--orange),var(--blue));}
+#loginScreen img.logo{width:64px;height:64px;border-radius:50%;margin-bottom:10px;}
 #loginScreen h1{margin-bottom:2px;}
 #loginScreen input{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:8px;margin:16px 0;font-size:14px;font-family:var(--body);}
 #loginScreen button{width:100%;font-family:var(--eyebrow);background:var(--green);color:#fff;border:none;border-radius:8px;padding:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;font-size:12px;cursor:pointer;}
 #loginMsg{font-size:12px;color:var(--mut);margin-top:12px;}
 .who{font-family:var(--eyebrow);font-size:11px;color:var(--mut);margin-top:6px;text-transform:uppercase;letter-spacing:.03em;}
 .who button{background:none;border:none;color:var(--blue);cursor:pointer;text-decoration:underline;font-size:11px;font-family:var(--eyebrow);}
+
+.livecard{text-align:center;padding:60px 30px;}
+.livecard h2{font-family:var(--display);font-weight:400;font-size:24px;color:var(--green);border:none;margin-bottom:10px;padding:0;}
+.livecard p{color:var(--mut);font-size:14px;max-width:480px;margin:0 auto;line-height:1.6;}
 </style>
 </head>
 <body>
@@ -108,18 +122,19 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const STATUSES = ["pipeline","submitted","won","lost","missed"];
 
 let session = null;
+let profile = null;
 let rows = [];
 let currentMonth = new Date().toISOString().slice(0,7);
+let activeTab = "tenders";
 
 function fmtR(n){ return "R "+Number(n||0).toLocaleString('en-ZA',{maximumFractionDigits:0}); }
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function monthLabel(m){ const [y,mo]=m.split('-'); return new Date(y,mo-1).toLocaleString('en-ZA',{month:'long',year:'numeric'}); }
 
-// ---------- AUTH ----------
 async function init(){
   const { data } = await sb.auth.getSession();
   session = data.session;
-  sb.auth.onAuthStateChange((event, s) => { session = s; renderRoot(); if(event==='SIGNED_IN') logLogin(); });
+  sb.auth.onAuthStateChange((event, s) => { session = s; profile = null; renderRoot(); if(event==='SIGNED_IN') logLogin(); });
   renderRoot();
 }
 
@@ -144,11 +159,27 @@ async function sendMagicLink(email){
   document.getElementById('loginMsg').textContent = error ? error.message : "Check your inbox for the login link.";
 }
 
+async function loadProfile(){
+  const { data } = await sb.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
+  profile = data || null;
+}
+
+async function saveProfile(fullName, role){
+  if(!fullName){ document.getElementById('profileMsg').textContent = "Enter your full name."; return; }
+  const { error } = await sb.from('profiles').upsert({
+    id: session.user.id, email: session.user.email, full_name: fullName, role: role || null
+  });
+  if(error){ document.getElementById('profileMsg').textContent = error.message; return; }
+  await loadProfile();
+  renderRoot();
+}
+
 function renderRoot(){
   const app = document.getElementById('app');
   if(!session){
     app.innerHTML = `
       <div id="loginScreen">
+        <img class="logo" src="/icon-192.png" alt="Ivy Africa" />
         <h1>Ivy Africa</h1>
         <div class="sub">Tender Portal — employees only</div>
         <input id="emailInput" type="email" placeholder="you${ALLOWED_DOMAIN}" />
@@ -158,10 +189,33 @@ function renderRoot(){
     document.getElementById('sendLinkBtn').onclick = () => sendMagicLink(document.getElementById('emailInput').value.trim());
     return;
   }
+
+  if(profile === null){
+    app.innerHTML = `<div class="livecard"><p>Loading your profile...</p></div>`;
+    loadProfile().then(()=>{
+      if(!profile){
+        app.innerHTML = `
+          <div id="loginScreen">
+            <img class="logo" src="/icon-192.png" alt="Ivy Africa" />
+            <h1>Welcome</h1>
+            <div class="sub">Set up your employee profile</div>
+            <input id="pName" type="text" placeholder="Full name" />
+            <input id="pRole" type="text" placeholder="Role (e.g. Tender Specialist)" />
+            <button id="pSaveBtn">Continue</button>
+            <div id="profileMsg"></div>
+          </div>`;
+        document.getElementById('pSaveBtn').onclick = () => saveProfile(
+          document.getElementById('pName').value.trim(), document.getElementById('pRole').value.trim());
+      } else {
+        loadTenders();
+      }
+    });
+    return;
+  }
+
   loadTenders();
 }
 
-// ---------- DATA ----------
 let loadSeq = 0;
 async function loadTenders(){
   const seq = ++loadSeq;
@@ -170,7 +224,7 @@ async function loadTenders(){
   const end = new Date(y, m, 1).toISOString().slice(0,10);
   const { data, error } = await sb.from('tenders').select('*')
     .gte('created_at', start).lt('created_at', end).order('deadline', {ascending:true});
-  if(seq !== loadSeq) return; // a newer request (from clicking prev/next again) already superseded this one
+  if(seq !== loadSeq) return;
   rows = data || [];
   render();
   subscribeRealtime();
@@ -184,11 +238,11 @@ function subscribeRealtime(){
   }catch(e){ console.warn('realtime subscribe skipped', e); }
 }
 
-async function addRow(name, entity, value, deadline, score){
+async function addRow(name, entity, value, deadline, score, category){
   if(!name) return;
   await sb.from('tenders').insert({
     name, entity, value: Number(value)||0, status:'pipeline', deadline: deadline||null,
-    score: score||null, logged_by_email: session.user.email
+    score: score||null, logged_by_email: session.user.email, category: category || 'tender'
   });
 }
 async function updateStatus(id, status){
@@ -222,7 +276,6 @@ function workingDaysSoFar(m){
   return count;
 }
 
-// ---------- SCORING ----------
 async function extractPdfText(file){
   const buf = await file.arrayBuffer();
   window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -238,6 +291,7 @@ async function extractPdfText(file){
 
 function wireScoring(){
   const fileInput = document.getElementById('docFile');
+  if(!fileInput) return;
   const pasteArea = document.getElementById('docPaste');
   const analyzeBtn = document.getElementById('analyzeBtn');
   const scorePanel = document.getElementById('scorePanel');
@@ -282,22 +336,21 @@ function renderScoreCard(r){
     <div style="margin-top:12px;"><button id="addScoredBtn" style="font-family:var(--eyebrow);background:var(--green);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;cursor:pointer;">Add to pipeline</button></div>
   `;
   document.getElementById('addScoredBtn').onclick = () => {
-    addRow(r.refNumber ? `${r.refNumber} — ${r.entity}` : r.entity, r.entity, r.estimatedValue, r.closingDate, r.estimatedFunctionalityScore);
+    addRow(r.refNumber ? `${r.refNumber} — ${r.entity}` : r.entity, r.entity, r.estimatedValue, r.closingDate, r.estimatedFunctionalityScore, 'tender');
   };
 }
 
-// ---------- REPORTS ----------
 function download(filename, content){
   const blob = new Blob([content], {type:'text/plain'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
   URL.revokeObjectURL(url);
 }
-function buildReport(days, label){
+function buildReport(days, label, catRows, catLabel){
   const cutoff = new Date(); cutoff.setDate(cutoff.getDate()-days+1);
   const cutoffStr = cutoff.toISOString().slice(0,10);
-  const subset = rows.filter(r => (r.created_at||"").slice(0,10) >= cutoffStr);
-  let out = `IVY AFRICA TENDER REPORT — ${label}\nGenerated: ${todayStr()}\nPeriod: ${cutoffStr} to ${todayStr()}\n\n`;
+  const subset = catRows.filter(r => (r.created_at||"").slice(0,10) >= cutoffStr);
+  let out = `IVY AFRICA ${catLabel.toUpperCase()} REPORT — ${label}\nGenerated: ${todayStr()}\nPeriod: ${cutoffStr} to ${todayStr()}\n\n`;
   STATUSES.forEach(s=>{
     const grp = subset.filter(r=>r.status===s);
     const val = grp.reduce((a,r)=>a+Number(r.value),0);
@@ -309,37 +362,23 @@ function buildReport(days, label){
   return out;
 }
 
-// ---------- RENDER ----------
-function render(){
-  const app=document.getElementById('app');
-  const submitted = rows.filter(r=>r.status==="submitted");
-  const pipeline = rows.filter(r=>r.status==="pipeline");
-  const missed = rows.filter(r=>r.status==="missed");
-  const won = rows.filter(r=>r.status==="won");
-  const lost = rows.filter(r=>r.status==="lost");
-  const totalValue = rows.reduce((s,r)=>s+Number(r.value),0);
+function renderDashboardSection(catRows, opts){
+  const submitted = catRows.filter(r=>r.status==="submitted");
+  const pipeline = catRows.filter(r=>r.status==="pipeline");
+  const missed = catRows.filter(r=>r.status==="missed");
+  const won = catRows.filter(r=>r.status==="won");
+  const lost = catRows.filter(r=>r.status==="lost");
+  const totalValue = catRows.reduce((s,r)=>s+Number(r.value),0);
   const submittedValue = submitted.reduce((s,r)=>s+Number(r.value),0);
   const wonValue = won.reduce((s,r)=>s+Number(r.value),0);
-  const goal = 10000000;
+  const goal = opts.goal;
   const pct = Math.min(100, (submittedValue/goal)*100);
   const wd = workingDaysSoFar(currentMonth);
-  const target = wd*5;
+  const target = opts.dailyTarget ? wd*opts.dailyTarget : null;
   const decided = won.length+lost.length;
   const winRate = decided ? Math.round((won.length/decided)*100) : 0;
 
-  app.innerHTML = `
-    <div class="top">
-      <div>
-        <h1>Ivy Africa Tender Portal</h1>
-        <div class="sub">Target 5 submissions/day · R10M+ opportunity value/month</div>
-        <div class="who">Signed in as ${session.user.email} — <button id="logoutBtn">sign out</button></div>
-      </div>
-      <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;">
-        <div class="reportbtns"><button id="dailyBtn">Daily report</button><button id="weeklyBtn">Weekly report</button></div>
-        <div class="month-nav"><button id="prevM" ${navLocked?'disabled':''}>←</button><strong>${monthLabel(currentMonth)}</strong><button id="nextM" ${navLocked?'disabled':''}>→</button></div>
-      </div>
-    </div>
-
+  return `
     <div class="grid">
       <div class="kpi"><div class="label">Submitted</div><div class="val">${submitted.length}</div><div class="note">${fmtR(submittedValue)}</div></div>
       <div class="kpi"><div class="label">In Pipeline</div><div class="val">${pipeline.length}</div><div class="note">${fmtR(pipeline.reduce((s,r)=>s+Number(r.value),0))}</div></div>
@@ -356,37 +395,39 @@ function render(){
       <div class="head"><span>Value goal progress (submitted)</span><span>${fmtR(submittedValue)} / ${fmtR(goal)} (${pct.toFixed(1)}%)</span></div>
       <div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div>
     </div>
+    ${target !== null ? `
     <div class="barwrap">
-      <div class="head"><span>Daily cadence (5/working day)</span><span style="color:${submitted.length>=target?'#0B3D2E':'#B23B2E'}">${submitted.length} submitted vs ${target} target (${wd} working days elapsed)</span></div>
+      <div class="head"><span>Daily cadence (${opts.dailyTarget}/working day)</span><span style="color:${submitted.length>=target?'#0B3D2E':'#B23B2E'}">${submitted.length} submitted vs ${target} target (${wd} working days elapsed)</span></div>
       <div class="bar"><div class="bar-fill" style="width:${Math.min(100,(submitted.length/Math.max(1,target))*100)}%;background:${submitted.length>=target?'linear-gradient(90deg,#0B3D2E,#1B4F8C)':'linear-gradient(90deg,#E8722C,#B23B2E)'}"></div></div>
-    </div>
+    </div>` : ''}
 
+    ${opts.showScoring ? `
     <div class="panel">
       <h2>Score a tender document</h2>
       <input type="file" id="docFile" accept=".pdf,.txt" style="margin-bottom:8px;" />
       <textarea id="docPaste" placeholder="Or paste tender text here..."></textarea>
       <div style="margin-top:8px;"><button id="analyzeBtn" style="font-family:var(--eyebrow);background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;cursor:pointer;">Analyze & score</button></div>
       <div id="scorePanel" class="scorepanel"></div>
-    </div>
+    </div>` : ''}
 
     <div class="panel">
-      <h2>Add tender manually</h2>
+      <h2>${opts.addLabel}</h2>
       <div class="formrow">
-        <input id="fName" placeholder="Tender name / RFQ ref" />
-        <input id="fEntity" placeholder="Entity" />
+        <input id="fName" placeholder="${opts.category==='grant' ? 'Opportunity name / call ref' : 'Tender name / RFQ ref'}" />
+        <input id="fEntity" placeholder="${opts.entityLabel}" />
         <input id="fValue" placeholder="Value (R)" type="number" />
         <input id="fDeadline" placeholder="Deadline" type="date" />
-        <button id="fAdd">Add</button>
+        <button id="fAdd" data-cat="${opts.category}">Add</button>
       </div>
     </div>
 
     <div class="panel">
-      <h2>Tenders — ${monthLabel(currentMonth)}</h2>
-      ${rows.length===0 ? '<div class="empty">No tenders logged yet this month.</div>' : `
+      <h2>${opts.title} — ${monthLabel(currentMonth)}</h2>
+      ${catRows.length===0 ? `<div class="empty">Nothing logged yet this month.</div>` : `
       <table>
-        <thead><tr><th>Tender</th><th>Entity</th><th>Value</th><th>Score</th><th>Closing</th><th>Submitted</th><th>Logged by</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>${opts.category==='grant'?'Opportunity':'Tender'}</th><th>${opts.entityLabel}</th><th>Value</th><th>Score</th><th>Closing</th><th>Submitted</th><th>Logged by</th><th>Status</th><th></th></tr></thead>
         <tbody>
-          ${rows.map(r=>`
+          ${catRows.map(r=>`
             <tr>
               <td>${r.name}</td><td>${r.entity||"—"}</td><td>${fmtR(r.value)}</td>
               <td>${r.score!=null?r.score:'—'}</td><td>${r.deadline||"—"}</td>
@@ -401,20 +442,79 @@ function render(){
       </table>`}
     </div>
   `;
+}
+
+function render(){
+  const app=document.getElementById('app');
+  const tenderRows = rows.filter(r => (r.category||'tender') === 'tender');
+  const grantRows = rows.filter(r => r.category === 'grant');
+  const whoName = profile && profile.full_name ? `${profile.full_name}${profile.role?' · '+profile.role:''}` : session.user.email;
+
+  let body = '';
+  if(activeTab === 'live'){
+    body = `
+      <div class="panel livecard">
+        <h2>Live Opportunities</h2>
+        <p>This tab will show tenders and grants scanned automatically each day from eTenders, the National Treasury Transparency Portal, and funder sites — scored and ranked before you ever have to go looking. In build. For now, add opportunities manually in the Tenders and Other Opportunities tabs.</p>
+      </div>`;
+  } else if(activeTab === 'tenders'){
+    body = renderDashboardSection(tenderRows, {
+      category:'tender', title:'Tenders', goal:10000000, dailyTarget:5, showScoring:true,
+      addLabel:'Add tender manually', entityLabel:'Entity'
+    });
+  } else {
+    body = renderDashboardSection(grantRows, {
+      category:'grant', title:'Other Opportunities', goal:2000000, dailyTarget:null, showScoring:false,
+      addLabel:'Add funding opportunity manually', entityLabel:'Funder / Agency'
+    });
+  }
+
+  app.innerHTML = `
+    <div class="top">
+      <div class="brand">
+        <img src="/icon-192.png" alt="Ivy Africa" />
+        <div>
+          <h1>Ivy Africa Tender Portal</h1>
+          <div class="sub">Target 5 submissions/day · R10M+ opportunity value/month</div>
+          <div class="who">Signed in as ${whoName} — <button id="logoutBtn">sign out</button></div>
+        </div>
+      </div>
+      ${activeTab !== 'live' ? `
+      <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="reportbtns"><button id="dailyBtn">Daily report</button><button id="weeklyBtn">Weekly report</button></div>
+        <div class="month-nav"><button id="prevM" ${navLocked?'disabled':''}>←</button><strong>${monthLabel(currentMonth)}</strong><button id="nextM" ${navLocked?'disabled':''}>→</button></div>
+      </div>` : ''}
+    </div>
+
+    <div class="tabbar">
+      <button data-tab="live" class="${activeTab==='live'?'active':''}">Live Opportunities</button>
+      <button data-tab="tenders" class="${activeTab==='tenders'?'active':''}">Tenders<span class="pill">${tenderRows.length}</span></button>
+      <button data-tab="grants" class="${activeTab==='grants'?'active':''}">Other Opportunities<span class="pill">${grantRows.length}</span></button>
+    </div>
+
+    ${body}
+  `;
 
   document.getElementById('logoutBtn').onclick = () => sb.auth.signOut();
-  document.getElementById('prevM').onclick = ()=>shiftMonth(-1);
-  document.getElementById('nextM').onclick = ()=>shiftMonth(1);
-  document.getElementById('dailyBtn').onclick = ()=>download(`tender-daily-${todayStr()}.txt`, buildReport(1,'Daily'));
-  document.getElementById('weeklyBtn').onclick = ()=>download(`tender-weekly-${todayStr()}.txt`, buildReport(7,'Weekly'));
-  document.getElementById('fAdd').onclick = ()=>{
-    addRow(document.getElementById('fName').value.trim(), document.getElementById('fEntity').value.trim(),
-      document.getElementById('fValue').value, document.getElementById('fDeadline').value);
-  };
-  document.querySelectorAll('.statusSel').forEach(sel=>{ sel.onchange = e => updateStatus(e.target.dataset.id, e.target.value); });
-  document.querySelectorAll('.editdate').forEach(sp=>{ sp.onclick = e => editSubmittedDate(e.target.dataset.editdate, e.target.dataset.current); });
-  document.querySelectorAll('.del').forEach(btn=>{ btn.onclick = e => removeRow(e.target.dataset.id); });
-  wireScoring();
+  document.querySelectorAll('.tabbar button').forEach(b=>{ b.onclick = ()=>{ activeTab = b.dataset.tab; render(); }; });
+
+  if(activeTab !== 'live'){
+    document.getElementById('prevM').onclick = ()=>shiftMonth(-1);
+    document.getElementById('nextM').onclick = ()=>shiftMonth(1);
+    const catRows = activeTab==='tenders' ? tenderRows : grantRows;
+    const catLabel = activeTab==='tenders' ? 'Tenders' : 'Other Opportunities';
+    document.getElementById('dailyBtn').onclick = ()=>download(`${activeTab}-daily-${todayStr()}.txt`, buildReport(1,'Daily', catRows, catLabel));
+    document.getElementById('weeklyBtn').onclick = ()=>download(`${activeTab}-weekly-${todayStr()}.txt`, buildReport(7,'Weekly', catRows, catLabel));
+    const addBtn = document.getElementById('fAdd');
+    if(addBtn) addBtn.onclick = ()=>{
+      addRow(document.getElementById('fName').value.trim(), document.getElementById('fEntity').value.trim(),
+        document.getElementById('fValue').value, document.getElementById('fDeadline').value, null, addBtn.dataset.cat);
+    };
+    document.querySelectorAll('.statusSel').forEach(sel=>{ sel.onchange = e => updateStatus(e.target.dataset.id, e.target.value); });
+    document.querySelectorAll('.editdate').forEach(sp=>{ sp.onclick = e => editSubmittedDate(e.target.dataset.editdate, e.target.dataset.current); });
+    document.querySelectorAll('.del').forEach(btn=>{ btn.onclick = e => removeRow(e.target.dataset.id); });
+    wireScoring();
+  }
 }
 
 if ('serviceWorker' in navigator) {
