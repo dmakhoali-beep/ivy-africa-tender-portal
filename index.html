@@ -160,7 +160,8 @@ async function sendMagicLink(email){
 }
 
 async function loadProfile(){
-  const { data } = await sb.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
+  const { data, error } = await sb.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
+  if(error){ profile = 'error:' + error.message; return; }
   profile = data || null;
 }
 
@@ -193,7 +194,18 @@ function renderRoot(){
   if(profile === null){
     app.innerHTML = `<div class="livecard"><p>Loading your profile...</p></div>`;
     loadProfile().then(()=>{
-      if(!profile){
+      if(typeof profile === 'string' && profile.startsWith('error:')){
+        app.innerHTML = `
+          <div id="loginScreen">
+            <img class="logo" src="/icon-192.png" alt="Ivy Africa" />
+            <h1>Setup needed</h1>
+            <div class="sub" style="color:#B23B2E;">Could not load your profile</div>
+            <p style="font-size:13px;color:var(--mut);margin:14px 0;">${profile.slice(6)}</p>
+            <p style="font-size:12px;color:var(--mut);margin-bottom:14px;">This usually means the <code>profiles</code> table hasn't been created in Supabase yet — run <code>add-profiles-and-categories.sql</code> in the SQL Editor, then retry.</p>
+            <button id="retryBtn">Retry</button>
+          </div>`;
+        document.getElementById('retryBtn').onclick = () => { profile = null; renderRoot(); };
+      } else if(!profile){
         app.innerHTML = `
           <div id="loginScreen">
             <img class="logo" src="/icon-192.png" alt="Ivy Africa" />
