@@ -244,6 +244,8 @@ async function saveProfile(fullName, role){
 }
 
 function renderRoot(){
+  const floatBg = document.getElementById('floatBg');
+  if(floatBg) floatBg.style.display = 'block';
   const app = document.getElementById('app');
   if(!session){
     app.innerHTML = `
@@ -548,6 +550,8 @@ function renderReportsTab(tenderRows, grantRows){
 }
 
 function render(){
+  const floatBg = document.getElementById('floatBg');
+  if(floatBg) floatBg.style.display = 'none';
   const app=document.getElementById('app');
   const tenderRows = rows.filter(r => (r.category||'tender') === 'tender');
   const grantRows = rows.filter(r => r.category === 'grant');
