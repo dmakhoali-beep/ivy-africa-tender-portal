@@ -58,9 +58,9 @@ h1{font-family:var(--display);font-size:30px;font-weight:400;letter-spacing:-.01
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(22,35,28,.05);transition:transform .15s,box-shadow .15s;}
 .kpi:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(22,35,28,.1);}
 .kpi::before{content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:var(--green);}
-.kpi .label{font-family:var(--eyebrow);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);font-weight:700;}
-.kpi .val{font-family:var(--display);font-size:30px;margin-top:6px;color:var(--ink);}
-.kpi .note{font-size:12px;color:var(--mut);margin-top:4px;}
+.kpi .label{font-family:var(--eyebrow);font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--mut);font-weight:700;}
+.kpi .val{font-family:var(--display);font-size:34px;margin-top:6px;color:var(--ink);}
+.kpi .note{font-size:12.5px;color:var(--mut);margin-top:4px;}
 .kpi.goal::before{background:var(--orange);} .kpi.goal .val{color:var(--green);}
 .kpi.warn::before{background:#B23B2E;} .kpi.warn .val{color:#B23B2E;}
 .kpi.won::before{background:var(--blue);} .kpi.won .val{color:var(--blue);}
@@ -71,7 +71,7 @@ h1{font-family:var(--display);font-size:30px;font-weight:400;letter-spacing:-.01
 .bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--orange));border-radius:7px 0 0 7px;transition:width .3s;}
 
 .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:20px;}
-.panel h2{font-family:var(--eyebrow);font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--green);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line);}
+.panel h2{font-family:var(--eyebrow);font-size:13.5px;text-transform:uppercase;letter-spacing:.07em;font-weight:700;color:var(--green);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line);}
 .formrow{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;margin-bottom:10px;}
 @media(max-width:800px){.formrow{grid-template-columns:1fr 1fr;}}
 .formrow input,.formrow select{padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:var(--body);}
@@ -113,7 +113,6 @@ textarea{width:100%;min-height:90px;padding:12px;border:1px solid var(--line);bo
 #loginScreen button{width:100%;font-family:var(--eyebrow);background:var(--green);color:#fff;border:none;border-radius:9px;padding:13px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;font-size:12px;cursor:pointer;transition:transform .12s,box-shadow .12s,background .15s;box-shadow:0 4px 12px rgba(11,61,46,.25);}
 #loginScreen button:hover{background:var(--green2);transform:translateY(-1px);box-shadow:0 6px 16px rgba(11,61,46,.32);}
 .tagline{font-family:var(--body);font-style:italic;color:var(--orange);font-size:12px;margin-top:2px;font-weight:500;}
-.slogan{font-family:var(--eyebrow);color:var(--blue);font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-top:6px;}
 #loginMsg{font-size:12px;color:var(--mut);margin-top:12px;}
 .who{font-family:var(--eyebrow);font-size:11px;color:var(--mut);margin-top:6px;text-transform:uppercase;letter-spacing:.03em;}
 .who button{background:none;border:none;color:var(--blue);cursor:pointer;text-decoration:underline;font-size:11px;font-family:var(--eyebrow);}
@@ -124,7 +123,7 @@ textarea{width:100%;min-height:90px;padding:12px;border:1px solid var(--line);bo
 
 #floatBg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
 #app, #loginScreen{position:relative;z-index:1;}
-.float-item{position:absolute;opacity:.4;animation:drift linear infinite;}
+.float-item{position:absolute;opacity:1;animation:drift linear infinite;}
 .float-item svg{display:block;}
 @keyframes drift{
   0%{transform:translate(0,110vh) rotate(0deg);}
@@ -137,38 +136,46 @@ textarea{width:100%;min-height:90px;padding:12px;border:1px solid var(--line);bo
 </head>
 <body>
 <div id="floatBg">
-  <div class="float-item" style="left:2%; width:120px; --dx:60px; --rot:35deg; animation-duration:26s; animation-delay:-2s;">
-    <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="3" fill="#0B3D2E"/><rect x="7" y="7" width="10" height="1.6" rx="0.8" fill="#F5F3EC"/><rect x="7" y="11" width="10" height="1.6" rx="0.8" fill="#F5F3EC"/><rect x="7" y="15" width="6" height="1.6" rx="0.8" fill="#F5F3EC"/></svg>
+  <svg width="0" height="0" style="position:absolute;">
+    <defs>
+      <linearGradient id="gGreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0B3D2E"/><stop offset="100%" stop-color="#2ECC71"/></linearGradient>
+      <linearGradient id="gOrange" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#E8722C"/><stop offset="100%" stop-color="#F2C94C"/></linearGradient>
+      <linearGradient id="gBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1B4F8C"/><stop offset="100%" stop-color="#4FA6E8"/></linearGradient>
+      <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#F2C94C"/><stop offset="100%" stop-color="#E8722C"/></linearGradient>
+    </defs>
+  </svg>
+  <div class="float-item" style="left:2%; width:96px; --dx:60px; --rot:35deg; animation-duration:26s; animation-delay:-2s;">
+    <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="3" fill="url(#gGreen)"/><rect x="7" y="7" width="10" height="1.6" rx="0.8" fill="#F5F3EC"/><rect x="7" y="11" width="10" height="1.6" rx="0.8" fill="#F5F3EC"/><rect x="7" y="15" width="6" height="1.6" rx="0.8" fill="#F5F3EC"/></svg>
   </div>
-  <div class="float-item" style="left:14%; width:100px; --dx:-70px; --rot:-30deg; animation-duration:32s; animation-delay:-9s;">
+  <div class="float-item" style="left:14%; width:80px; --dx:-70px; --rot:-30deg; animation-duration:32s; animation-delay:-9s;">
     <svg viewBox="0 0 24 24" fill="none" stroke="#E8722C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19l5-7 4 3 5-9 4 4"/></svg>
   </div>
-  <div class="float-item" style="left:26%; width:90px; --dx:50px; --rot:25deg; animation-duration:22s; animation-delay:-14s;">
-    <svg viewBox="0 0 24 24"><rect x="3" y="13" width="4.5" height="9" rx="1.2" fill="#1B4F8C"/><rect x="9.8" y="8" width="4.5" height="14" rx="1.2" fill="#F2C94C"/><rect x="16.6" y="3" width="4.5" height="19" rx="1.2" fill="#2ECC71"/></svg>
+  <div class="float-item" style="left:26%; width:72px; --dx:50px; --rot:25deg; animation-duration:22s; animation-delay:-14s;">
+    <svg viewBox="0 0 24 24"><rect x="3" y="13" width="4.5" height="9" rx="1.2" fill="url(#gBlue)"/><rect x="9.8" y="8" width="4.5" height="14" rx="1.2" fill="url(#gGold)"/><rect x="16.6" y="3" width="4.5" height="19" rx="1.2" fill="url(#gGreen)"/></svg>
   </div>
-  <div class="float-item" style="left:38%; width:80px; --dx:-60px; --rot:40deg; animation-duration:28s; animation-delay:-4s;">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#F2C94C"/><text x="12" y="16.5" font-size="11" text-anchor="middle" fill="#0B3D2E" font-family="Arial" font-weight="700">R</text></svg>
+  <div class="float-item" style="left:38%; width:64px; --dx:-60px; --rot:40deg; animation-duration:28s; animation-delay:-4s;">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="url(#gGold)"/><text x="12" y="16.5" font-size="11" text-anchor="middle" fill="url(#gGreen)" font-family="Arial" font-weight="700">R</text></svg>
   </div>
-  <div class="float-item" style="left:50%; width:110px; --dx:75px; --rot:-25deg; animation-duration:24s; animation-delay:-19s;">
-    <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="3" fill="#1B4F8C"/><rect x="7" y="7" width="10" height="1.6" rx="0.8" fill="#F5F3EC"/><rect x="7" y="11" width="10" height="1.6" rx="0.8" fill="#F5F3EC"/></svg>
+  <div class="float-item" style="left:50%; width:88px; --dx:75px; --rot:-25deg; animation-duration:24s; animation-delay:-19s;">
+    <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="3" fill="url(#gBlue)"/><rect x="7" y="7" width="10" height="1.6" rx="0.8" fill="#F5F3EC"/><rect x="7" y="11" width="10" height="1.6" rx="0.8" fill="#F5F3EC"/></svg>
   </div>
-  <div class="float-item" style="left:62%; width:95px; --dx:-65px; --rot:32deg; animation-duration:30s; animation-delay:-11s;">
+  <div class="float-item" style="left:62%; width:76px; --dx:-65px; --rot:32deg; animation-duration:30s; animation-delay:-11s;">
     <svg viewBox="0 0 24 24" fill="none" stroke="#2ECC71" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19l5-7 4 3 5-9 4 4"/><path d="M17 4h4v4"/></svg>
   </div>
-  <div class="float-item" style="left:74%; width:85px; --dx:55px; --rot:-35deg; animation-duration:20s; animation-delay:-6s;">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0B3D2E"/><path d="M7 12l3.5 3.5L17 8.5" fill="none" stroke="#F5F3EC" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <div class="float-item" style="left:74%; width:68px; --dx:55px; --rot:-35deg; animation-duration:20s; animation-delay:-6s;">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="url(#gGreen)"/><path d="M7 12l3.5 3.5L17 8.5" fill="none" stroke="#F5F3EC" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </div>
-  <div class="float-item" style="left:86%; width:105px; --dx:-50px; --rot:28deg; animation-duration:27s; animation-delay:-16s;">
-    <svg viewBox="0 0 24 24"><rect x="3" y="13" width="4.5" height="9" rx="1.2" fill="#E8722C"/><rect x="9.8" y="8" width="4.5" height="14" rx="1.2" fill="#1B4F8C"/><rect x="16.6" y="3" width="4.5" height="19" rx="1.2" fill="#F2C94C"/></svg>
+  <div class="float-item" style="left:86%; width:84px; --dx:-50px; --rot:28deg; animation-duration:27s; animation-delay:-16s;">
+    <svg viewBox="0 0 24 24"><rect x="3" y="13" width="4.5" height="9" rx="1.2" fill="url(#gOrange)"/><rect x="9.8" y="8" width="4.5" height="14" rx="1.2" fill="url(#gBlue)"/><rect x="16.6" y="3" width="4.5" height="19" rx="1.2" fill="url(#gGold)"/></svg>
   </div>
-  <div class="float-item" style="left:94%; width:75px; --dx:30px; --rot:-22deg; animation-duration:25s; animation-delay:-21s;">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#E8722C"/><text x="12" y="16.5" font-size="11" text-anchor="middle" fill="#F5F3EC" font-family="Arial" font-weight="700">R</text></svg>
+  <div class="float-item" style="left:94%; width:60px; --dx:30px; --rot:-22deg; animation-duration:25s; animation-delay:-21s;">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="url(#gOrange)"/><text x="12" y="16.5" font-size="11" text-anchor="middle" fill="#F5F3EC" font-family="Arial" font-weight="700">R</text></svg>
   </div>
-  <div class="float-item" style="left:9%; width:70px; --dx:40px; --rot:-30deg; animation-duration:23s; animation-delay:-24s;">
+  <div class="float-item" style="left:9%; width:56px; --dx:40px; --rot:-30deg; animation-duration:23s; animation-delay:-24s;">
     <svg viewBox="0 0 24 24" fill="none" stroke="#F2C94C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19l5-7 4 3 5-9 4 4"/></svg>
   </div>
-  <div class="float-item" style="left:45%; width:60px; --dx:-45px; --rot:20deg; animation-duration:29s; animation-delay:-13s;">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#2ECC71"/><path d="M7 12l3.5 3.5L17 8.5" fill="none" stroke="#0B3D2E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <div class="float-item" style="left:45%; width:48px; --dx:-45px; --rot:20deg; animation-duration:29s; animation-delay:-13s;">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="url(#gGreen)"/><path d="M7 12l3.5 3.5L17 8.5" fill="none" stroke="#0B3D2E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </div>
 </div>
 <div id="app"></div>
@@ -243,7 +250,6 @@ function renderRoot(){
       <div id="loginScreen">
         <img class="logo-wide" src="/logo-horizontal.png" alt="Ivy Africa" />
         <div class="sub">Tender Portal — employees only</div>
-        <div class="slogan">Africa's Edtech Company</div>
         <input id="emailInput" type="email" placeholder="you${ALLOWED_DOMAIN}" />
         <button id="sendLinkBtn">Send login link</button>
         <div id="loginMsg"></div>
@@ -518,6 +524,29 @@ function renderDashboardSection(catRows, opts){
   `;
 }
 
+function reportCard(scope, title, accentVar){
+  return `
+    <div class="panel" style="border-left:4px solid var(${accentVar});">
+      <h2 style="border:none;padding:0;margin-bottom:10px;">${title}</h2>
+      <div class="reportbtns" style="flex-wrap:wrap;">
+        <button data-report="${scope}:daily">Daily</button>
+        <button data-report="${scope}:weekly">Weekly</button>
+        <button data-report="${scope}:monthly">Monthly (${monthLabel(currentMonth)})</button>
+      </div>
+    </div>`;
+}
+function renderReportsTab(tenderRows, grantRows){
+  return `
+    <div class="panel livecard" style="padding:36px 30px;">
+      <h2>Reports</h2>
+      <p>Download a plain-text summary for any period — split by status, with total value. Pick a scope below.</p>
+    </div>
+    ${reportCard('tenders','Tenders','--green')}
+    ${reportCard('grants','Other Opportunities','--orange')}
+    ${reportCard('all','All Opportunities (combined)','--blue')}
+  `;
+}
+
 function render(){
   const app=document.getElementById('app');
   const tenderRows = rows.filter(r => (r.category||'tender') === 'tender');
@@ -536,11 +565,13 @@ function render(){
       category:'tender', title:'Tenders', goal:10000000, dailyTarget:5, showScoring:true,
       addLabel:'Add tender manually', entityLabel:'Entity'
     });
-  } else {
+  } else if(activeTab === 'grants'){
     body = renderDashboardSection(grantRows, {
       category:'grant', title:'Other Opportunities', goal:2000000, dailyTarget:null, showScoring:false,
       addLabel:'Add funding opportunity manually', entityLabel:'Funder / Agency'
     });
+  } else {
+    body = renderReportsTab(tenderRows, grantRows);
   }
 
   app.innerHTML = `
@@ -550,13 +581,11 @@ function render(){
         <div>
           <h1>Ivy Africa Tender Portal <span class="dots"><span></span><span></span><span></span></span></h1>
           <div class="sub">Target 5 submissions/day · R10M+ opportunity value/month</div>
-          <div class="slogan">Africa's Edtech Company</div>
-          <div class="who">Signed in as ${whoName} — <button id="logoutBtn">sign out</button></div>
+            <div class="who">Signed in as ${whoName} — <button id="logoutBtn">sign out</button></div>
         </div>
       </div>
-      ${activeTab !== 'live' ? `
+      ${(activeTab === 'tenders' || activeTab === 'grants') ? `
       <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;">
-        <div class="reportbtns"><button id="dailyBtn">Daily report</button><button id="weeklyBtn">Weekly report</button></div>
         <div class="month-nav"><button id="prevM" ${navLocked?'disabled':''}>←</button><strong>${monthLabel(currentMonth)}</strong><button id="nextM" ${navLocked?'disabled':''}>→</button></div>
       </div>` : ''}
     </div>
@@ -565,6 +594,7 @@ function render(){
       <button data-tab="live" class="${activeTab==='live'?'active':''}">Live Opportunities</button>
       <button data-tab="tenders" class="${activeTab==='tenders'?'active':''}">Tenders<span class="pill">${tenderRows.length}</span></button>
       <button data-tab="grants" class="${activeTab==='grants'?'active':''}">Other Opportunities<span class="pill">${grantRows.length}</span></button>
+      <button data-tab="reports" class="${activeTab==='reports'?'active':''}">Reports</button>
     </div>
 
     ${body}
@@ -573,13 +603,10 @@ function render(){
   document.getElementById('logoutBtn').onclick = () => sb.auth.signOut();
   document.querySelectorAll('.tabbar button').forEach(b=>{ b.onclick = ()=>{ activeTab = b.dataset.tab; render(); }; });
 
-  if(activeTab !== 'live'){
+  if(activeTab === 'tenders' || activeTab === 'grants'){
     document.getElementById('prevM').onclick = ()=>shiftMonth(-1);
     document.getElementById('nextM').onclick = ()=>shiftMonth(1);
     const catRows = activeTab==='tenders' ? tenderRows : grantRows;
-    const catLabel = activeTab==='tenders' ? 'Tenders' : 'Other Opportunities';
-    document.getElementById('dailyBtn').onclick = ()=>download(`${activeTab}-daily-${todayStr()}.txt`, buildReport(1,'Daily', catRows, catLabel));
-    document.getElementById('weeklyBtn').onclick = ()=>download(`${activeTab}-weekly-${todayStr()}.txt`, buildReport(7,'Weekly', catRows, catLabel));
     const addBtn = document.getElementById('fAdd');
     if(addBtn) addBtn.onclick = ()=>{
       addRow(document.getElementById('fName').value.trim(), document.getElementById('fEntity').value.trim(),
@@ -589,6 +616,19 @@ function render(){
     document.querySelectorAll('.editdate').forEach(sp=>{ sp.onclick = e => editSubmittedDate(e.target.dataset.editdate, e.target.dataset.current); });
     document.querySelectorAll('.del').forEach(btn=>{ btn.onclick = e => removeRow(e.target.dataset.id); });
     wireScoring();
+  }
+
+  if(activeTab === 'reports'){
+    document.querySelectorAll('[data-report]').forEach(btn=>{
+      btn.onclick = () => {
+        const [scope, span] = btn.dataset.report.split(':');
+        const catRows = scope==='tenders' ? tenderRows : scope==='grants' ? grantRows : rows;
+        const catLabel = scope==='tenders' ? 'Tenders' : scope==='grants' ? 'Other Opportunities' : 'All Opportunities';
+        const days = span==='daily' ? 1 : span==='weekly' ? 7 : daysInMonth(currentMonth);
+        const label = span==='daily' ? 'Daily' : span==='weekly' ? 'Weekly' : 'Monthly';
+        download(`${scope}-${span}-${todayStr()}.txt`, buildReport(days, label, catRows, catLabel));
+      };
+    });
   }
 }
 
