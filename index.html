@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
@@ -18,7 +18,7 @@
   --bg:#F5F3EC; --card:#FFFFFF; --line:#E4E0D4; --ink:#16231C; --mut:#6E7368;
   --display:'DM Serif Display', Georgia, serif;
   --eyebrow:'Syne', system-ui, sans-serif;
-  --body:'DM Sans', system-ui, sans-serif;
+  --body:'Inter', system-ui, sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;font-family:var(--body);}
 body{background:
@@ -63,7 +63,9 @@ h1{font-family:var(--display);font-size:30px;font-weight:400;letter-spacing:-.01
 .kpi .note{font-size:12.5px;color:var(--mut);margin-top:4px;}
 .kpi.goal::before{background:var(--orange);} .kpi.goal .val{color:var(--green);}
 .kpi.warn::before{background:#B23B2E;} .kpi.warn .val{color:#B23B2E;}
-.kpi.won::before{background:var(--blue);} .kpi.won .val{color:var(--blue);}
+.kpi.won::before{background:var(--green);} .kpi.won .val{color:var(--green);}
+.kpi.submitted::before{background:var(--blue);} .kpi.submitted .val{color:var(--blue);}
+.kpi.pipeline::before{background:var(--orange);} .kpi.pipeline .val{color:var(--orange);}
 
 .barwrap{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:20px;}
 .barwrap .head{display:flex;justify-content:space-between;font-family:var(--eyebrow);font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;margin-bottom:10px;color:var(--green);}
@@ -83,11 +85,11 @@ th{text-align:left;font-family:var(--eyebrow);font-size:10px;text-transform:uppe
 td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:middle;}
 tr:hover td{background:rgba(11,61,46,.03);}
 .tag{padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;display:inline-block;font-family:var(--eyebrow);}
-.tag.submitted{background:#E4F0E9;color:var(--green);}
+.tag.submitted{background:#E3ECF5;color:var(--blue);}
 .tag.pipeline{background:#FDEBD9;color:var(--orange);}
 .tag.missed{background:#FBE4E1;color:#B23B2E;}
-.tag.won{background:#DCEAFB;color:var(--blue);}
-.tag.lost{background:#EDEBE5;color:var(--mut);}
+.tag.won{background:#E4F0E9;color:var(--green);}
+.tag.lost{background:#FBE4E1;color:#B23B2E;}
 select.statusSel{border:none;background:transparent;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--eyebrow);}
 .del{background:none;border:none;color:var(--mut);cursor:pointer;font-size:14px;}
 .del:hover{color:#B23B2E;}
@@ -121,6 +123,17 @@ textarea{width:100%;min-height:90px;padding:12px;border:1px solid var(--line);bo
 .livecard h2{font-family:var(--display);font-weight:400;font-size:24px;color:var(--green);border:none;margin-bottom:10px;padding:0;}
 .livecard p{color:var(--mut);font-size:14px;max-width:480px;margin:0 auto;line-height:1.6;}
 
+.brand-logo{height:52px;width:auto;}
+.avatar{width:44px;height:44px;border-radius:50%;background:var(--green);color:#fff;border:none;font-family:var(--eyebrow);font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 3px 10px rgba(11,61,46,.25);transition:transform .12s;}
+.avatar:hover{transform:scale(1.06);}
+.avatar-lg{width:64px;height:64px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--eyebrow);font-weight:700;font-size:20px;margin:0 auto 14px;}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(11,35,26,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;}
+.modal-card{background:var(--card);border-radius:18px;padding:32px;max-width:420px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.3);}
+.modal-card button#closeModalBtn{font-family:var(--eyebrow);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px 20px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.03em;cursor:pointer;}
+
+.footer{text-align:center;font-size:11px;color:var(--mut);padding:30px 0 10px;font-family:var(--eyebrow);letter-spacing:.03em;}
+
 #floatBg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
 #app, #loginScreen{position:relative;z-index:1;}
 .float-item{position:absolute;opacity:1;animation:drift linear infinite;}
@@ -138,10 +151,10 @@ textarea{width:100%;min-height:90px;padding:12px;border:1px solid var(--line);bo
 <div id="floatBg">
   <svg width="0" height="0" style="position:absolute;">
     <defs>
-      <linearGradient id="gGreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0B3D2E"/><stop offset="100%" stop-color="#2ECC71"/></linearGradient>
-      <linearGradient id="gOrange" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#E8722C"/><stop offset="100%" stop-color="#F2C94C"/></linearGradient>
-      <linearGradient id="gBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1B4F8C"/><stop offset="100%" stop-color="#4FA6E8"/></linearGradient>
-      <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#F2C94C"/><stop offset="100%" stop-color="#E8722C"/></linearGradient>
+      <linearGradient id="gGreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0B3D2E"/><stop offset="100%" stop-color="#124A38"/></linearGradient>
+      <linearGradient id="gOrange" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#E8722C"/><stop offset="100%" stop-color="#B85A20"/></linearGradient>
+      <linearGradient id="gBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1B4F8C"/><stop offset="100%" stop-color="#123A66"/></linearGradient>
+      <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#B23B2E"/><stop offset="100%" stop-color="#E8722C"/></linearGradient>
     </defs>
   </svg>
   <div class="float-item" style="left:2%; width:96px; --dx:60px; --rot:35deg; animation-duration:26s; animation-delay:-2s;">
@@ -160,7 +173,7 @@ textarea{width:100%;min-height:90px;padding:12px;border:1px solid var(--line);bo
     <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="3" fill="url(#gBlue)"/><rect x="7" y="7" width="10" height="1.6" rx="0.8" fill="#F5F3EC"/><rect x="7" y="11" width="10" height="1.6" rx="0.8" fill="#F5F3EC"/></svg>
   </div>
   <div class="float-item" style="left:62%; width:76px; --dx:-65px; --rot:32deg; animation-duration:30s; animation-delay:-11s;">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#2ECC71" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19l5-7 4 3 5-9 4 4"/><path d="M17 4h4v4"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="#0B3D2E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19l5-7 4 3 5-9 4 4"/><path d="M17 4h4v4"/></svg>
   </div>
   <div class="float-item" style="left:74%; width:68px; --dx:55px; --rot:-35deg; animation-duration:20s; animation-delay:-6s;">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="url(#gGreen)"/><path d="M7 12l3.5 3.5L17 8.5" fill="none" stroke="#F5F3EC" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -172,7 +185,7 @@ textarea{width:100%;min-height:90px;padding:12px;border:1px solid var(--line);bo
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="url(#gOrange)"/><text x="12" y="16.5" font-size="11" text-anchor="middle" fill="#F5F3EC" font-family="Arial" font-weight="700">R</text></svg>
   </div>
   <div class="float-item" style="left:9%; width:56px; --dx:40px; --rot:-30deg; animation-duration:23s; animation-delay:-24s;">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#F2C94C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19l5-7 4 3 5-9 4 4"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="#B23B2E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19l5-7 4 3 5-9 4 4"/></svg>
   </div>
   <div class="float-item" style="left:45%; width:48px; --dx:-45px; --rot:20deg; animation-duration:29s; animation-delay:-13s;">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="url(#gGreen)"/><path d="M7 12l3.5 3.5L17 8.5" fill="none" stroke="#0B3D2E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -462,8 +475,8 @@ function renderDashboardSection(catRows, opts){
 
   return `
     <div class="grid">
-      <div class="kpi"><div class="label">Submitted</div><div class="val">${submitted.length}</div><div class="note">${fmtR(submittedValue)}</div></div>
-      <div class="kpi"><div class="label">In Pipeline</div><div class="val">${pipeline.length}</div><div class="note">${fmtR(pipeline.reduce((s,r)=>s+Number(r.value),0))}</div></div>
+      <div class="kpi submitted"><div class="label">Submitted</div><div class="val">${submitted.length}</div><div class="note">${fmtR(submittedValue)}</div></div>
+      <div class="kpi pipeline"><div class="label">In Pipeline</div><div class="val">${pipeline.length}</div><div class="note">${fmtR(pipeline.reduce((s,r)=>s+Number(r.value),0))}</div></div>
       <div class="kpi ${missed.length?'warn':''}"><div class="label">Missed</div><div class="val">${missed.length}</div><div class="note">${fmtR(missed.reduce((s,r)=>s+Number(r.value),0))}</div></div>
       <div class="kpi goal"><div class="label">Total Opportunity Value</div><div class="val">${fmtR(totalValue)}</div><div class="note">Goal: ${fmtR(goal)}</div></div>
     </div>
@@ -549,6 +562,89 @@ function renderReportsTab(tenderRows, grantRows){
   `;
 }
 
+async function loadTeamData(){
+  const start = currentMonth + "-01";
+  const [y,m] = currentMonth.split('-').map(Number);
+  const end = new Date(y, m, 1).toISOString().slice(0,10);
+  const [{data: allRows}, {data: profiles}, {data: logins}] = await Promise.all([
+    sb.from('tenders').select('*').gte('created_at', start).lt('created_at', end),
+    sb.from('profiles').select('*'),
+    sb.from('login_logs').select('*').gte('logged_in_at', start).lt('logged_in_at', end).order('logged_in_at', {ascending:false})
+  ]);
+  const byEmail = {};
+  (profiles||[]).forEach(p => { byEmail[p.email] = { name:p.full_name||p.email, role:p.role||'—', submitted:0, won:0, lost:0, value:0, lastLogin:null, lastCity:null }; });
+  (allRows||[]).forEach(r => {
+    const e = r.logged_by_email;
+    if(!e) return;
+    if(!byEmail[e]) byEmail[e] = { name:e, role:'—', submitted:0, won:0, lost:0, value:0, lastLogin:null, lastCity:null };
+    if(r.status==='submitted' || r.status==='won' || r.status==='lost') byEmail[e].submitted++;
+    if(r.status==='won') byEmail[e].won++;
+    if(r.status==='lost') byEmail[e].lost++;
+    byEmail[e].value += Number(r.value||0);
+  });
+  (logins||[]).forEach(l => {
+    if(!byEmail[l.email]) byEmail[l.email] = { name:l.email, role:'—', submitted:0, won:0, lost:0, value:0, lastLogin:null, lastCity:null };
+    if(!byEmail[l.email].lastLogin){ byEmail[l.email].lastLogin = l.logged_in_at; byEmail[l.email].lastCity = [l.city,l.country].filter(Boolean).join(', '); }
+  });
+  const list = Object.values(byEmail).sort((a,b)=> b.submitted - a.submitted);
+  const totalSubmitted = list.reduce((s,p)=>s+p.submitted,0);
+  const totalValue = list.reduce((s,p)=>s+p.value,0);
+
+  return `
+    <div id="teamMount">
+      <div class="grid2">
+        <div class="kpi"><div class="label">Team members active</div><div class="val">${list.length}</div></div>
+        <div class="kpi"><div class="label">Total submitted (month)</div><div class="val">${totalSubmitted}</div></div>
+        <div class="kpi goal"><div class="label">Total value (month)</div><div class="val">${fmtR(totalValue)}</div></div>
+      </div>
+      <div class="panel">
+        <h2>Per-employee performance — ${monthLabel(currentMonth)}</h2>
+        <table>
+          <thead><tr><th>Employee</th><th>Role</th><th>Submitted</th><th>Won</th><th>Lost</th><th>Value logged</th><th>Last login</th><th>Last location</th></tr></thead>
+          <tbody>
+            ${list.map(p=>`
+              <tr>
+                <td>${p.name}</td><td>${p.role}</td><td>${p.submitted}</td>
+                <td style="color:var(--green);font-weight:700;">${p.won}</td>
+                <td style="color:#B23B2E;font-weight:700;">${p.lost}</td>
+                <td>${fmtR(p.value)}</td>
+                <td style="font-size:11px;">${p.lastLogin ? new Date(p.lastLogin).toLocaleString('en-ZA') : '—'}</td>
+                <td style="font-size:11px;">${p.lastCity || '—'}</td>
+              </tr>`).join('') || `<tr><td colspan="8" class="empty">No activity yet this month.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function openProfileModal(tenderRows, grantRows){
+  const mine = [...tenderRows, ...grantRows].filter(r => r.logged_by_email === session.user.email);
+  const submitted = mine.filter(r=>r.status==='submitted'||r.status==='won'||r.status==='lost').length;
+  const won = mine.filter(r=>r.status==='won').length;
+  const lost = mine.filter(r=>r.status==='lost').length;
+  const value = mine.reduce((s,r)=>s+Number(r.value||0),0);
+  const wrap = document.getElementById('profileModalWrap');
+  wrap.innerHTML = `
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal-card">
+        <div class="avatar-lg">${profile && profile.full_name ? profile.full_name.trim().split(/\s+/).map(p=>p[0]).slice(0,2).join('').toUpperCase() : (session.user.email[0]||'?').toUpperCase()}</div>
+        <h2 style="border:none;padding:0;">${profile && profile.full_name ? profile.full_name : session.user.email}</h2>
+        <div class="sub" style="margin-bottom:2px;">${profile && profile.role ? profile.role : ''}</div>
+        <div style="font-size:12px;color:var(--mut);margin-bottom:18px;">${session.user.email}</div>
+        <div class="grid2" style="margin-bottom:0;">
+          <div class="kpi"><div class="label">Submitted (month)</div><div class="val">${submitted}</div></div>
+          <div class="kpi won"><div class="label">Won</div><div class="val">${won}</div></div>
+          <div class="kpi"><div class="label">Value logged</div><div class="val" style="font-size:20px;">${fmtR(value)}</div></div>
+        </div>
+        <button id="closeModalBtn" style="margin-top:20px;">Close</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('modalOverlay').onclick = (e) => { if(e.target.id==='modalOverlay'){ wrap.innerHTML=''; } };
+  document.getElementById('closeModalBtn').onclick = () => { wrap.innerHTML=''; };
+}
+
 function render(){
   const floatBg = document.getElementById('floatBg');
   if(floatBg) floatBg.style.display = 'none';
@@ -556,6 +652,9 @@ function render(){
   const tenderRows = rows.filter(r => (r.category||'tender') === 'tender');
   const grantRows = rows.filter(r => r.category === 'grant');
   const whoName = profile && profile.full_name ? `${profile.full_name}${profile.role?' · '+profile.role:''}` : session.user.email;
+  const avatarInitials = profile && profile.full_name
+    ? profile.full_name.trim().split(/\s+/).map(p=>p[0]).slice(0,2).join('').toUpperCase()
+    : (session.user.email[0]||'?').toUpperCase();
 
   let body = '';
   if(activeTab === 'live'){
@@ -574,6 +673,12 @@ function render(){
       category:'grant', title:'Other Opportunities', goal:2000000, dailyTarget:null, showScoring:false,
       addLabel:'Add funding opportunity manually', entityLabel:'Funder / Agency'
     });
+  } else if(activeTab === 'team' && profile && profile.is_admin){
+    body = `<div id="teamMount" class="panel livecard"><h2>Team Overview</h2><p>Loading...</p></div>`;
+    loadTeamData().then(html => {
+      const el = document.querySelector('#teamMount');
+      if(el) el.outerHTML = html;
+    });
   } else {
     body = renderReportsTab(tenderRows, grantRows);
   }
@@ -581,17 +686,18 @@ function render(){
   app.innerHTML = `
     <div class="top">
       <div class="brand">
-        <img src="/icon-192.png" alt="Ivy Africa" />
+        <img src="/logo-horizontal.png" alt="Ivy Africa" class="brand-logo" />
         <div>
           <h1>Ivy Africa Tender Portal <span class="dots"><span></span><span></span><span></span></span></h1>
           <div class="sub">Target 5 submissions/day · R10M+ opportunity value/month</div>
-            <div class="who">Signed in as ${whoName} — <button id="logoutBtn">sign out</button></div>
+          <div class="who">Signed in as ${whoName} — <button id="logoutBtn">sign out</button></div>
         </div>
       </div>
-      ${(activeTab === 'tenders' || activeTab === 'grants') ? `
-      <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;">
-        <div class="month-nav"><button id="prevM" ${navLocked?'disabled':''}>←</button><strong>${monthLabel(currentMonth)}</strong><button id="nextM" ${navLocked?'disabled':''}>→</button></div>
-      </div>` : ''}
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+        <button id="profileAvatar" class="avatar" title="My profile">${avatarInitials}</button>
+        ${(activeTab === 'tenders' || activeTab === 'grants') ? `
+        <div class="month-nav"><button id="prevM" ${navLocked?'disabled':''}>←</button><strong>${monthLabel(currentMonth)}</strong><button id="nextM" ${navLocked?'disabled':''}>→</button></div>` : ''}
+      </div>
     </div>
 
     <div class="tabbar">
@@ -599,13 +705,18 @@ function render(){
       <button data-tab="tenders" class="${activeTab==='tenders'?'active':''}">Tenders<span class="pill">${tenderRows.length}</span></button>
       <button data-tab="grants" class="${activeTab==='grants'?'active':''}">Other Opportunities<span class="pill">${grantRows.length}</span></button>
       <button data-tab="reports" class="${activeTab==='reports'?'active':''}">Reports</button>
+      ${profile && profile.is_admin ? `<button data-tab="team" class="${activeTab==='team'?'active':''}">Team</button>` : ''}
     </div>
 
     ${body}
+
+    <div class="footer">© ${new Date().getFullYear()} Ivy Africa (Pty) Ltd. All rights reserved.</div>
+    <div id="profileModalWrap"></div>
   `;
 
   document.getElementById('logoutBtn').onclick = () => sb.auth.signOut();
   document.querySelectorAll('.tabbar button').forEach(b=>{ b.onclick = ()=>{ activeTab = b.dataset.tab; render(); }; });
+  document.getElementById('profileAvatar').onclick = () => openProfileModal(tenderRows, grantRows);
 
   if(activeTab === 'tenders' || activeTab === 'grants'){
     document.getElementById('prevM').onclick = ()=>shiftMonth(-1);
